@@ -24,6 +24,12 @@ int main(int argc, char *argv[])
     signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.
+    /*
+    Expected command if RR:
+    ./process_generator.out processes.txt -sch 3 -q 2
+    else:
+    ./process_generator.out processes.txt -sch 1
+    */
     //validating input arguments provided in the terminal
     if(argc<4)
     {
