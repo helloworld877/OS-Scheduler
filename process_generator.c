@@ -2,6 +2,9 @@
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/types.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 //for msgsnd()
 #include <sys/msg.h>
 //for msgget()
@@ -10,18 +13,20 @@
 //global variables:
 int msgq_id;
 int send_data;
+int clock_id;
+int scheduler_id;
 
 struct message
 {
      long m_type;
-     int message_info[4];
+     int message_data[4];
 };
 
-void clearResources(int);
+// void clearResources(int);
 
 int main(int argc, char *argv[])
 {
-    signal(SIGINT, clearResources);
+    // signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.
     /*
@@ -54,34 +59,45 @@ int main(int argc, char *argv[])
    FILE*fp=fopen("processes.txt","r");
    int processes_num=0;
    int character=0;
-   do{
-        character=fgetc(fp);
-        if(character=='\n') //after "\n" comes the process id
-        {
-            character=fgetc(fp);
-            if(character != EOF) //ensure that this is not the end of file
-                processes_num=atoi(character); //this will overwrite until it holds the last id
-        }
-   }while(character != EOF) 
+   char chr = getc(fp);
+    while (chr != EOF)
+    {
+        //Count whenever new line is encountered
+        if (chr == '\n')
+            processes_num+=1;
+        
+        //take next character from file.
+        chr = getc(fp);
+    }
+
 
    //Make 2D array to hold process data
-   int process_data[processes_num-1][4];
+   int process_data[processes_num-2][4];
 
    //reset the file ptr to the beginning of the file
     rewind(fp);
 
-    //skip commented line at that is at the beginning
++    //skip commented line at that is at the beginning
     fscanf(fp, "%*[^\n]\n");
 
     //initialize 2D array with processes' data
-    for(int i=0;i<processes_num;i++) //each row
+    for(int i=0;i<processes_num-1;i++) //each row
     {
         for(int j=0;j<4;j++) //each coloumn
             fscanf(fp,"%d",&process_data[i][j]);
     }
+
+
+    // for(int i=0;i<processes_num-1;i++) //each row
+    // {
+    //     for(int j=0;j<4;j++) //each coloumn
+    //         printf("%d ",process_data[i][j]);
+    //     printf("\n");
+    // }
     
     //done with reading file, close it
     fclose(fp);
+
 
      // 2. Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
     int algo=atoi(argv[3]);
@@ -120,16 +136,19 @@ int main(int argc, char *argv[])
    pid=fork();
    if(pid==0) //child process i.e. clock process
    {
+        clock_id = getpid();
         if (execv("./clk.out", argv) == -1)
             perror("failed to execv for clock process");
    }
 
     //For scheduler process
     //argv list should change (inside scheduler process), note that this should be initialized with char
-    int pid;
     pid=fork();
-    if(pid==0) //child process i.e. scheduler process
+    
+    if(pid == 0) //child process i.e. scheduler process
     {
+        scheduler_id = getpid();
+        printf("%d", scheduler_id);
         //To change our data to char, we will use character buffers
         char buff1[5]; //4 for int + 1 for null terminator     
         char buff2[5];
@@ -207,7 +226,9 @@ int main(int argc, char *argv[])
 
 }
 
-void clearResources(int signum)
-{
-    //TODO Clears all resources in case of interruption
-}
+// void clearResources(int signum)
+// {
+//     // printf("Caught Signal SIGNIT, Clearing All resources\n");
+//     // kill(clock_id, SIGKILL);
+
+// }

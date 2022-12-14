@@ -12,7 +12,6 @@
 int main(int argc, char *argv[])
 {
     initClk();
-
  //TODO: implement the scheduler.
  //TODO: upon termination release the clock resources.
  //Useful general fns to help us:
