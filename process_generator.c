@@ -81,19 +81,19 @@ int main(int argc, char *argv[])
     fscanf(fp, "%*[^\n]\n");
 
     //initialize 2D array with processes' data
-    for(int i=0;i<processes_num-1;i++) //each row
+    for(int i=0;i<processes_num;i++) //each row
     {
         for(int j=0;j<4;j++) //each coloumn
             fscanf(fp,"%d",&process_data[i][j]);
     }
 
 
-    // for(int i=0;i<processes_num-1;i++) //each row
-    // {
-    //     for(int j=0;j<4;j++) //each coloumn
-    //         printf("%d ",process_data[i][j]);
-    //     printf("\n");
-    // }
+     for(int i=0;i<processes_num;i++) //each row
+     {
+        for(int j=0;j<4;j++) //each coloumn
+            printf("%d ",process_data[i][j]);
+        printf("\n");
+    }
     
     //done with reading file, close it
     fclose(fp);
