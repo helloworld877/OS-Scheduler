@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
         chr = getc(fp);
     }
 
-
+    processes_num-=1;
    //Make 2D array to hold process data
-   int process_data[processes_num-2][4];
+   int process_data[processes_num][4];
 
    //reset the file ptr to the beginning of the file
     rewind(fp);

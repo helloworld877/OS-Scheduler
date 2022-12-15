@@ -20,9 +20,14 @@ int main(int argc, char *argv[])
 //argv[2]: chosen algorithm 
 //switch case 3ala 7asab anhy algorithm
 
-int processes_queue[MAX];
-int processes_Burst_Time[MAX];
-int processes_PRIO[MAX];
+int processes_number = atoi(argv[1]);
+int algo_number = atoi(argv[2]);
+int quantum = atoi(argv[3]);
+
+
+int processes_queue[processes_number];
+int processes_Burst_Time[processes_number];
+int processes_PRIO[processes_number];
 int IND = 0;
 
 
