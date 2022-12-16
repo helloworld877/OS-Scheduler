@@ -21,6 +21,7 @@ int main(int agrc, char *argv[])
     signal(SIGUSR1, SIGUSR1_handler);
     initClk();
     remainingtime = atoi(argv[1]);
+    raise(SIGUSR1);
 
     while (remainingtime > 0)
     {

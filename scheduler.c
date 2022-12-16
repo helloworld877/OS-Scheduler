@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
             if (nexttime > time)
             {
                 time = nexttime;
-                int PID, Status;
+
                 // If there is a process that is executing and there is another process with a higher priority we change the current executing process to it
                 if (p_executing && peek_queue(readyQueue)->ID != p_executing->ID)
                 {
@@ -102,21 +102,26 @@ int main(int argc, char *argv[])
                 // First time for process to run:
                 if (p_executing->Status == WAITING)
                 {
-                    PID = fork();
+                    fflush(stdout);
+                    pid_t PID = fork();
                     printf("////////////PID is %d///////////\n", PID);
+
+                    fflush(stdout);
+                    char buff1[5]; // for ID
+                    char buff2[5]; // for Runtime
+                    sprintf(buff1, '%d', p_executing->Runtime);
+                    sprintf(buff2, '%d', p_executing->ID);
+                    argv[1] = buff1;
+                    argv[2] = buff2;
+                    p_executing->Start_time = getClk();
                     if (PID == 0)
                     {
                         fflush(stdout);
-                        char buff1[5]; // for ID
-                        char buff2[5]; // for Runtime
-                        sprintf(buff1, '%d', p_executing->ID);
-                        sprintf(buff2, '%d', p_executing->Runtime);
-                        argv[1] = buff1;
-                        argv[2] = buff2;
-                        p_executing->Start_time = getClk();
-                        printf("//////////////////I AM THE CHILLLD//////////////\n");
-                        if (execv("./process.out", argv) == -1)
-                            perror("Failed to execv\n");
+                        printf("\nI AM THE CHILLLD\n");
+                        fflush(stdout);
+
+                        // if (execv("./process.out", argv) == -1)
+                        //     perror("Failed to execv\n");
                         exit(0);
                     }
                     else
@@ -129,9 +134,15 @@ int main(int argc, char *argv[])
                         p_executing->PID = PID;
                         // change status to stopped and make process wait for execution
                         p_executing->Status = STOPPED;
-                        kill(PID, SIGUSR1);
                     }
                 }
+                // int status;
+                // if (waitpid(p_executing->PID, &status, 0))
+                //     if (WIFEXITED(status))
+                //         printf("child exited with status of %d\n", WEXITSTATUS(status));
+                //     else
+                //         puts("child did not exit successfully");
+
                 // run the process for 1 clock cycle
                 kill(p_executing->PID, SIGUSR2); // run process
                 sleep(1);                        // wait one clock cycle
@@ -238,8 +249,7 @@ int main(int argc, char *argv[])
         case 4: // Multiple level Feedback Loop
             break;
         }
-
-        destroyClk(true);
     }
+    destroyClk(true);
     return 0;
 }
