@@ -35,6 +35,7 @@ int main(int agrc, char *argv[])
 }
 int SIGUSR1_handler(int signum)
 {
+    struct sigaction sigact;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     sigact.sa_handler = SIGUSR2_handler;
