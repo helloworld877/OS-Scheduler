@@ -16,13 +16,15 @@ int send_data;
 int clock_id;
 int scheduler_id;
 
+
+
+// void clearResources(int);
+
 struct message
 {
      long m_type;
      int message_data[4];
 };
-
-// void clearResources(int);
 
 int main(int argc, char *argv[])
 {
@@ -88,13 +90,6 @@ int main(int argc, char *argv[])
     }
 
 
-     for(int i=0;i<processes_num;i++) //each row
-     {
-        for(int j=0;j<4;j++) //each coloumn
-            printf("%d ",process_data[i][j]);
-        printf("\n");
-    }
-    
     //done with reading file, close it
     fclose(fp);
 
