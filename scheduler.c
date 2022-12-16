@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
                 {
                     printf("Process with ID %d has just arrived\n", msg.message_data[0]);
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
-                    enqueueRR(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
+                    enQueueRR(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
                 }
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
