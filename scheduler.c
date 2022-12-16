@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     // Message variables:
     key_t key_sch_pgen = 33; // key associated with the message queue
     // use IPC_CREAT to create the message queue if it does not exist
-    msgq_id = msgget(key_sch_pgen, 0666 | IPC_CREAT); // creating message queue
+    int msgq_id = msgget(key_sch_pgen, 0666 | IPC_CREAT); // creating message queue
     struct message msg;
     int received; // to store return of msgrcv
 
@@ -63,8 +63,8 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(&readyQueue) && received == -1) // no processes present to perform
                 {
-                    printf("Ready queue is empty. Waiting to receive a new process...\n")
-                        printf("Current time : %d \n", getClk());
+                    printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    printf("Current time : %d \n", getClk());
                     printf("Total processes received till now : %d\n", received_number);
                     printf("Remaining processes that have still not arrived : %d", processes_number - received_number);
                     // wait for a message
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
                 time = nexttime;
                 int PID, Status;
                 // If there is a process that is executing and there is another process with a higher priority we change the current executing process to it
-                if (p_executing && peek_queue(readyQueue).ID != p_executing.ID)
+                if (p_executing && peek_queue(readyQueue)->ID != p_executing->ID)
                 {
                     // changing the current running process to the highest priority process
                     p_executing = peek_queue(readyQueue);
@@ -100,15 +100,16 @@ int main(int argc, char *argv[])
 
                 printf("Process in execution is with ID %d \n", p_executing->ID);
 
-                if (p_executing->STATUS == WAITING)
+                // First time for process to run:
+                if (p_executing->Status == WAITING)
                 {
                     PID = fork();
                     if (PID == 0)
                     {
                         char buff1[5]; // for ID
                         char buff2[5]; // for Runtime
-                        sprintf(buff1, % d, p_executing->ID);
-                        sprintf(buff2, % d, p_executing->Runtime);
+                        sprintf(buff1, '%d', p_executing->ID);
+                        sprintf(buff2, '%d', p_executing->Runtime);
                         argv[1] = buff1;
                         argv[2] = buff2;
                         p_executing->Start_time = getClk();
@@ -116,18 +117,23 @@ int main(int argc, char *argv[])
                         if (execv("./process.out", argv) == -1)
                             perror("Failed to execv");
                     }
-                    // First time for process to run:
                     else
                     {
                         // TODO: calculate Waiting_time. Put info in output file
+                        printf("created process with PID=%d for process ID=%d", PID, p_executing->ID);
                         p_PIDS[indexPID] = PID;
                         indexPID++;
                         p_executing->Start_time = getClk();
+                        p_executing->PID = PID;
                         // change status to stopped and make process wait for execution
-                        p_executing->Status = STOPPED
-                        kill(PID, SIGUSR1)
+                        p_executing->Status = STOPPED;
+                        kill(PID, SIGUSR1);
                     }
                 }
+                // run the process for 1 clock cycle
+                kill(p_executing->PID, SIGUSR2); // run process
+                sleep(1);                        // wait one clock cycle
+                kill(p_executing->PID, SIGUSR1); // pause process
             }
         }
 
@@ -146,8 +152,8 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(&readyQueue) && received == -1) // no processes present to perform
                 {
-                    printf("Ready queue is empty. Waiting to receive a new process...\n")
-                        printf("Current time : %d \n", getClk());
+                    printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    printf("Current time : %d \n", getClk());
                     printf("Total processes received till now : %d\n", received_number);
                     printf("Remaining processes that have still not arrived : %d", processes_number - received_number);
                     // wait for a message
@@ -183,15 +189,15 @@ int main(int argc, char *argv[])
 
                 printf("Process in execution is with ID %d \n", p_executing->ID);
 
-                if (p_executing->STATUS == WAITING)
+                if (p_executing->Status == WAITING)
                 {
                     PID = fork();
                     if (PID == 0)
                     {
                         char buff1[5]; // for ID
                         char buff2[5]; // for Runtime
-                        sprintf(buff1, % d, p_executing->ID);
-                        sprintf(buff2, % d, p_executing->Runtime);
+                        sprintf(buff1, "%d", p_executing->ID);
+                        sprintf(buff2, "%d", p_executing->Runtime);
                         argv[1] = buff1;
                         argv[2] = buff2;
                         p_executing->Start_time = getClk();
@@ -210,9 +216,9 @@ int main(int argc, char *argv[])
                     }
                 }
                 // if process was stopped then resume its processing
-                else if (p_executing->STATUS == STOPPED)
+                else if (p_executing->Status == STOPPED)
                 {
-                    p_executing->STATUS = CONTINUE;
+                    p_executing->Status = CONTINUE;
                 }
             }
             break;
@@ -223,3 +229,5 @@ int main(int argc, char *argv[])
 
         destroyClk(true);
     }
+    return 0;
+}
