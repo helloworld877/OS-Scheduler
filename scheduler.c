@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
     int nexttime;
     int *p_PIDS = (int *)malloc(processes_number * sizeof(int)); //For process PIDs
     int indexPID = 0;
+    int finishedProcesses=0;
 
     //For statistics:
     Queue *finishedQueue=createQueue();
@@ -62,7 +63,6 @@ switch(algo_number)
     break;
 
     case 3: //Round Robin
-    int finishedProcesses=0;
 
     //While there are still processes in the ready queue or there are still processes to be recieved
     while(!isEmpty(readyQueue) || (received_number<processes_number))
@@ -76,7 +76,7 @@ switch(algo_number)
             //msgrcv returns -1 if no message was received
             if(isEmpty(readyQueue) && received==-1) //no processes present to perform
             {
-                printf("Ready queue is empty. Waiting to receive a new process...\n")
+                printf("Ready queue is empty. Waiting to receive a new process...\n");
                 printf("Current time : %d \n",getClk());
                 printf("Total processes received till now : %d\n", received_number);
                 printf("Remaining processes that have still not arrived : %d \n",processes_number-received_number);
@@ -88,9 +88,9 @@ switch(algo_number)
             if(received != -1) 
             {
                 Node_to_insert=newNode(msg.message_data[0],msg.message_data[1],msg.message_data[2],msg.message_data[3], WAITING);       
-                enqueueRR(readyQueue,Node_to_insert);
+                enQueueRR(readyQueue,Node_to_insert);
                 received_number++;
-                print("Current ready queue : ");
+                printf("Current ready queue : ");
                 printqueue(readyQueue);
                 printf("\n");
             }
@@ -108,7 +108,7 @@ switch(algo_number)
         if(p_executing && p_executing->Status != FINISHED)
         {
             enQueueRR(readyQueue,p_executing);
-            print("Current ready queue : ");
+            printf("Current ready queue : ");
             printqueue(readyQueue);
             printf("\n");
         }
@@ -118,7 +118,7 @@ switch(algo_number)
 
         printf("Process in execution is with ID %d \n",p_executing->ID);
         
-        if(p_executing->STATUS == WAITING)
+        if(p_executing->Status == WAITING)
         {
             PID=fork();
             totalRuntime+=p_executing->Runtime;
@@ -127,8 +127,8 @@ switch(algo_number)
             {
                 char buff1[5]; //for ID
                 char buff2[5]; //for Runtime
-                sprintf(buff1, %d, p_executing->ID);
-                sprintf(buff2, %d, p_executing->Runtime);
+                sprintf(buff1, "%d", p_executing->ID);
+                sprintf(buff2, "%d", p_executing->Runtime);
                 argv[1]=buff1;
                 argv[2]=buff2;
                 p_executing->Start_time=getClk();
@@ -228,7 +228,7 @@ switch(algo_number)
        }
 
        // 2.
-        else if(p_executing->Remaining_time<=quantum && p_executing->Running_time!=0)
+        else if(p_executing->Remaining_time<=quantum && p_executing->Runtime!=0)
         {
             //Sleep for the remaining time
             sleep(p_executing->Remaining_time);
@@ -259,13 +259,13 @@ switch(algo_number)
         }
 
     }
+    }
     break;
 
     case 4: //Multiple level Feedback Loop
     break;
 
 }
-
 
 destroyClk(true);
 }
