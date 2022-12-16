@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     //Message variables:
     key_t key_sch_pgen=33; //key associated with the message queue
     //use IPC_CREAT to create the message queue if it does not exist
-    msgq_id = msgget(key_sch_pgen, 0666 | IPC_CREAT);  // creating message queue
+    int msgq_id = msgget(key_sch_pgen, 0666 | IPC_CREAT);  // creating message queue
     struct message msg;
     int received; //to store return of msgrcv 
 
@@ -31,6 +31,11 @@ int main(int argc, char *argv[])
         perror("Error in creation");
         exit(-1);
     }
+
+    //Output file:
+    FILE *fptr;
+    fptr = fopen("schedular.log", "w");
+    fprintf(fptr, "#At time x process y state arr w total z remain y wait k \n");
 
     //Structs and general variables:
     Queue *readyQueue=createQueue();
@@ -41,6 +46,10 @@ int main(int argc, char *argv[])
     int nexttime;
     int *p_PIDS = (int *)malloc(processes_number * sizeof(int)); //For process PIDs
     int indexPID = 0;
+
+    //For statistics:
+    Queue *finishedQueue=createQueue();
+    int totalRuntime=0;
 
 //Algorithm execution
 switch(algo_number)
@@ -53,8 +62,10 @@ switch(algo_number)
     break;
 
     case 3: //Round Robin
+    int finishedProcesses=0;
+
     //While there are still processes in the ready queue or there are still processes to be recieved
-    while(!isEmpty(&readyQueue) || (received_number<processes_number))
+    while(!isEmpty(readyQueue) || (received_number<processes_number))
     {
         //We will break out of the below loop when we do not receive any message and our readyQueue is not empty
         do
@@ -63,12 +74,12 @@ switch(algo_number)
             received=msgrcv(msgq_id,&msg,sizeof(msg.message_data), 0, IPC_NOWAIT);
 
             //msgrcv returns -1 if no message was received
-            if(isEmpty(&readyQueue) && received==-1) //no processes present to perform
+            if(isEmpty(readyQueue) && received==-1) //no processes present to perform
             {
                 printf("Ready queue is empty. Waiting to receive a new process...\n")
                 printf("Current time : %d \n",getClk());
                 printf("Total processes received till now : %d\n", received_number);
-                printf("Remaining processes that have still not arrived : %d",processes_number-received_number);
+                printf("Remaining processes that have still not arrived : %d \n",processes_number-received_number);
                 //wait for a message
                 received=msgrcv(msgq_id,&msg,sizeof(msg.message_data), 0, !IPC_NOWAIT);
             }
@@ -76,10 +87,12 @@ switch(algo_number)
             //if a message has been received
             if(received != -1) 
             {
-                
                 Node_to_insert=newNode(msg.message_data[0],msg.message_data[1],msg.message_data[2],msg.message_data[3], WAITING);       
-                enqueueRR(readyQueue,Node_to_insert); //create fn to enqueue a node with these info FIFO
+                enqueueRR(readyQueue,Node_to_insert);
                 received_number++;
+                print("Current ready queue : ");
+                printqueue(readyQueue);
+                printf("\n");
             }
         }while(received != -1); //since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
@@ -89,12 +102,15 @@ switch(algo_number)
     if(nexttime>time)
     {
         time=nexttime;
-        int PID,Status;
+        int PID;
         
         //If there is a process that is executing and its state is not finished then enqueue it again
         if(p_executing && p_executing->Status != FINISHED)
         {
-            enQueueRR(&readyQueue,p_executing);
+            enQueueRR(readyQueue,p_executing);
+            print("Current ready queue : ");
+            printqueue(readyQueue);
+            printf("\n");
         }
 
         p_executing=peek_queue(readyQueue);
@@ -105,6 +121,8 @@ switch(algo_number)
         if(p_executing->STATUS == WAITING)
         {
             PID=fork();
+            totalRuntime+=p_executing->Runtime;
+
             if(PID==0)
             {
                 char buff1[5]; //for ID
@@ -116,7 +134,7 @@ switch(algo_number)
                 p_executing->Start_time=getClk();
 
                 if(execv("./process.out",argv)==-1)
-                    perror("Failed to execv");
+                    perror("Failed to execv for process.c");
             }
             //First time for process to run:
             else
@@ -125,15 +143,120 @@ switch(algo_number)
                 p_PIDS[indexPID]=PID;
                 indexPID++;
                 p_executing->Start_time=getClk();
-                //signal wait   
+                printf("Starting process with ID %d and PID %d\n",p_executing->ID,PID); 
+
+                //Write to output file:
+                p_executing->Waiting_time = p_executing->Start_time - p_executing->Arrival;
+                fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time,p_executing->Waiting_time);
+            
             }        
         }
         //if process was stopped then resume its processing
-        else if(p_executing->STATUS == STOPPED)
+        else if(p_executing->Status == STOPPED)
         {
-            p_executing->STATUS = CONTINUE;
+            //change process status
+            p_executing->Status = CONTINUE;
+            printf("Resuming process with ID %d and PID %d\n",p_executing->ID,p_PIDS[p_executing->ID-1]);
+
+            //Write to output file
+            p_executing->Waiting_time+=getClk()-p_executing->Stopped_time;
+            fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time,p_executing->Waiting_time);
+            
+            //continue the process
+            kill(p_PIDS[p_executing->ID-1],SIGUSR2);
         }
 
+        /* Two possibilities:
+        1. The remaining time is greater than one quantum. Therefore, run the process for one quantum and stop.
+        2. The remaining time is less than one quantum. Therefore, run the process for the remaining time and stop.
+        */
+
+       // 1.
+       if(p_executing->Remaining_time>quantum)
+       {
+            //Sleep for one quantum period
+            sleep(quantum);
+
+            //stop the process
+            printf("Stopping process with ID %d and PID %d...\n",p_executing->ID,p_PIDS[p_executing->ID-1]);
+            kill(p_PIDS[p_executing->ID-1],SIGUSR1);
+            printf("Process with ID %d and PID %d has stopped\n",p_executing->ID,p_PIDS[p_executing->ID-1]);
+
+            //decrease remaining time by one qnatum period
+            p_executing->Remaining_time-=quantum;
+
+            //change the process status
+            p_executing->Status=STOPPED;
+
+            //Record the time at which the process has stopped
+            p_executing->Stopped_time=getClk();
+
+            //write to file
+            fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time,p_executing->Waiting_time);
+       
+            //Check if this is the only and last process in the ready queue then run it as batch (until it finishes)
+            if(isEmpty(readyQueue) && finishedProcesses==processes_number-1)
+            {
+                printf("Process with ID %d and PID %d is the last process, executing till the end\n",p_executing->ID,p_PIDS[p_executing->ID-1]);
+
+                //Sleep for the remaining time
+                sleep(p_executing->Remaining_time);
+
+                //Update remaining time
+                p_executing->Remaining_time=0;
+
+                //change the process status
+                p_executing->Status=FINISHED;
+
+                //Update finish time
+                p_executing->Finish_time=getClk();
+
+                //Calculate TA and WTA
+                p_executing->TA = getClk() - p_executing->Arrival;
+                p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
+                
+                //write to file
+                fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time,p_executing->Waiting_time);
+
+                printf("Finished process with ID %d at time %d \n",p_executing->ID,p_executing->Finish_time);
+                finishedProcesses++;
+                enQueueRR(finishedQueue,p_executing);
+                printf("Current finished queue : ");
+                printqueue(finishedQueue);
+                printf("\n");
+            }
+       }
+
+       // 2.
+        else if(p_executing->Remaining_time<=quantum && p_executing->Running_time!=0)
+        {
+            //Sleep for the remaining time
+            sleep(p_executing->Remaining_time);
+
+            //Update remaining time
+            p_executing->Remaining_time=0;
+
+            //change the process status
+            p_executing->Status=FINISHED;
+
+            //Update finish time
+            p_executing->Finish_time=getClk();
+
+            //Calculate TA and WTA
+            p_executing->TA=getClk()-p_executing->Arrival;
+            p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
+
+            //write to file
+            fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time,p_executing->Waiting_time);
+
+
+            printf("Finished process with ID %d at time %d \n",p_executing->ID,p_executing->Finish_time);
+            finishedProcesses++;
+            enQueueRR(finishedQueue,p_executing);
+            printf("Current finished queue : ");
+            printqueue(finishedQueue);
+            printf("\n");
+        }
 
     }
     break;
