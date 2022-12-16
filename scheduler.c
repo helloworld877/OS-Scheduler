@@ -51,8 +51,9 @@ int main(int argc, char *argv[])
 
     // MARK
     case 2: // Preemptive Highest Priority First
+        printf("HPF inside scheduler\n");
         // While there are still processes in the ready queue or there are still processes to be recieved
-        while (!isEmpty(&readyQueue) || (received_number < processes_number))
+        while (!isEmpty(readyQueue) || (received_number < processes_number))
         {
             // We will break out of the below loop when we do not receive any message and our readyQueue is not empty
             do
@@ -61,12 +62,12 @@ int main(int argc, char *argv[])
                 received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
 
                 // msgrcv returns -1 if no message was received
-                if (isEmpty(&readyQueue) && received == -1) // no processes present to perform
+                if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
                     printf("Ready queue is empty. Waiting to receive a new process...\n");
                     printf("Current time : %d \n", getClk());
                     printf("Total processes received till now : %d\n", received_number);
-                    printf("Remaining processes that have still not arrived : %d", processes_number - received_number);
+                    printf("Remaining processes that have still not arrived : %d\n", processes_number - received_number);
                     // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
@@ -98,14 +99,14 @@ int main(int argc, char *argv[])
                     p_executing = peek_queue(readyQueue);
                 }
 
-                printf("Process in execution is with ID %d \n", p_executing->ID);
-
                 // First time for process to run:
                 if (p_executing->Status == WAITING)
                 {
                     PID = fork();
+                    printf("////////////PID is %d///////////\n", PID);
                     if (PID == 0)
                     {
+                        fflush(stdout);
                         char buff1[5]; // for ID
                         char buff2[5]; // for Runtime
                         sprintf(buff1, '%d', p_executing->ID);
@@ -113,14 +114,15 @@ int main(int argc, char *argv[])
                         argv[1] = buff1;
                         argv[2] = buff2;
                         p_executing->Start_time = getClk();
-
+                        printf("//////////////////I AM THE CHILLLD//////////////\n");
                         if (execv("./process.out", argv) == -1)
-                            perror("Failed to execv");
+                            perror("Failed to execv\n");
+                        exit(0);
                     }
                     else
                     {
                         // TODO: calculate Waiting_time. Put info in output file
-                        printf("created process with PID=%d for process ID=%d", PID, p_executing->ID);
+                        printf("created process with PID=%d for process ID=%d\n", PID, p_executing->ID);
                         p_PIDS[indexPID] = PID;
                         indexPID++;
                         p_executing->Start_time = getClk();
@@ -134,6 +136,16 @@ int main(int argc, char *argv[])
                 kill(p_executing->PID, SIGUSR2); // run process
                 sleep(1);                        // wait one clock cycle
                 kill(p_executing->PID, SIGUSR1); // pause process
+                printf("Process in execution is with ID %d \n", p_executing->ID);
+                int x = kill(p_executing->PID, 0);
+                printf("finished?= %d\n", x);
+                // remove the process that ended from the queue
+                if (kill(p_executing->PID, 0) != 0)
+                {
+                    printf("finished process %d\n ", p_executing->ID);
+                    p_executing = NULL;
+                    deQueue(readyQueue);
+                }
             }
         }
 
