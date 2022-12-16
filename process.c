@@ -8,17 +8,21 @@ HOW TO USE PROCESS
 kill(pid_of_the _process,SIGUSR1/2)
 
 
-*/
+/
 
-/* Modify this file as needed*/
+/ Modify this file as needed*/
+
 int remainingtime;
 int msgq_id;
 
 int SIGUSR1_handler(int signum);
 int SIGUSR2_handler(int signum);
-int main(int agrc, char *argv[])
-{
+
+int main(int agrc, charargv[])
+{ 
+
     signal(SIGUSR1, SIGUSR1_handler);
+    raise(SIGUSR1);
     initClk();
     remainingtime = atoi(argv[1]);
 
