@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 enum STATUS
 {
@@ -13,7 +14,7 @@ typedef struct Node
     int Runtime;
     int Priority;
     enum STATUS Status;
-    Node *next;
+    struct Node* next;
 
     //For output file
     int Finish_time;
@@ -29,14 +30,14 @@ typedef struct Node
 
 typedef struct Queue
 {
-    Node *Head;
+    struct Node *Head;
 }Queue;
 
 
 //Create new Node
 Node *newNode(int id, int arrival, int run, int p,enum STATUS stat)
 {
-    Node *tmp = (Node *)malloc(sizeof(Node));
+    struct Node *tmp = (Node *)malloc(sizeof(Node));
     tmp->ID = id;
     tmp->Arrival = arrival;
     tmp->Runtime = run;
@@ -48,7 +49,7 @@ Node *newNode(int id, int arrival, int run, int p,enum STATUS stat)
 
 Queue* createQueue()
 {
-    Queue *q=(Queue*)malloc(sizeof(Queue));
+    struct Queue *q=(Queue*)malloc(sizeof(Queue));
     q->Head=NULL;
     return q;
 }
@@ -56,7 +57,7 @@ Queue* createQueue()
 void enQueueRR(Queue *q,  Node* newNode)
 {
     // Create a new node
-    Node *tmp = newNode;
+    struct Node *tmp = newNode;
 
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
@@ -65,14 +66,20 @@ void enQueueRR(Queue *q,  Node* newNode)
         return;
     }
 
-    //TO-DO: Else insert at the end of the queue
+    {
+        struct Node * Trav = q->Head;
+        while (Trav->next)
+            Trav = Trav->next;
+
+        Trav->next = tmp;
+    }
 }
 
 void enQueueHPF(Queue *q,  Node* newNode)
 {
     // Create a new node
-    Node *tmp = newNode;
-
+    struct Node* tmp = newNode;
+  
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
     {
@@ -80,25 +87,50 @@ void enQueueHPF(Queue *q,  Node* newNode)
         return;
     }
 
-    Node *parent = q->Head;
-    if (parent->Priority > tmp->Priority)
+    else if (q->Head && q->Head->Priority > tmp->Priority)
     {
-        // Insert New Node before head
         tmp->next = q->Head;
         q->Head = tmp;
+        return;
     }
+
     else
     {
-        // TO-DO: Traverse the list and find a position to insert the new node
+        struct Node*trav1 = q->Head;
+        struct Node*trav2 = trav1->next;
+        int flag = 0;
+        while (trav2!=NULL)
+        {
+            if (trav2->Priority > tmp->Priority)
+            {
+                trav1->next = tmp;
+                tmp->next = trav2;
+                flag = 1;
+                break;
+            }
+            else
+            {
+                trav1 = trav1->next;
+                trav2 = trav2->next;
+            }
+        }
+
+        if (!flag)
+            trav1->next = tmp;
+        
 
     }
+
+
+    
+
 }
 
 void enQueueSJF(Queue *q,  Node* newNode)
 {
-    // Create a new node
-    Node *tmp = newNode;
-
+     // Create a new node
+    struct Node* tmp = newNode;
+  
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
     {
@@ -106,36 +138,70 @@ void enQueueSJF(Queue *q,  Node* newNode)
         return;
     }
 
-    Node *parent = q->Head;
-    if (parent->Runtime > tmp->Runtime)
+    else if (q->Head && q->Head->Runtime > tmp->Runtime)
     {
-        // Insert New Node before head
         tmp->next = q->Head;
         q->Head = tmp;
+        return;
     }
+
     else
     {
-        // TO-DO raverse the list and find a position to insert the new node
+        struct Node*trav1 = q->Head;
+        struct Node*trav2 = trav1->next;
+        int flag = 0;
+        while (trav2!=NULL)
+        {
+            if (trav2->Runtime > tmp->Runtime)
+            {
+                trav1->next = tmp;
+                tmp->next = trav2;
+                flag = 1;
+                break;
+            }
+            else
+            {
+                trav1 = trav1->next;
+                trav2 = trav2->next;
+            }
+        }
+
+        if (!flag)
+            trav1->next = tmp;
+        
 
     }
+}
+
+
+
+void printqueue(Queue *q)
+{
+    struct Node* Trav = q->Head;
+    while(Trav)
+    {
+        printf("%d ",Trav->ID);
+        Trav=Trav->next;
+    }
+}
+
+
+bool isEmpty(Queue *q)
+{
+    if (q->Head)
+        return false;
+    return true;
 }
 
 void deQueue(struct Queue *q)
 {
-    //TO-DO
-}
+    if (isEmpty(q))
+        return;
+    q->Head = q->Head->next;
 
-void printqueue(Queue *q)
-{
-    //TO-DO
-}
-
-bool isEmpty(Queue *q)
-{
-    //TO-DO
 }
 
 Node* peek_queue(Queue* q) //return ptr on head
 {
-    //TO-DO
+    return q->Head;
 }

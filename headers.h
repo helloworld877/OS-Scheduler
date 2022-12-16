@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include <queue.h>
+#include "queue.h"
 
-typedef short bool;
+
 #define true 1
 #define false 0
 
