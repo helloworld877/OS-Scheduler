@@ -1,14 +1,4 @@
 #include "headers.h"
-#include <string.h>
-#include <sys/ipc.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-//for msgsnd()
-#include <sys/msg.h>
-//for msgget()
-#include <sys/stat.h>
 
 //global variables:
 int msgq_id;
@@ -88,7 +78,6 @@ int main(int argc, char *argv[])
         for(int j=0;j<4;j++) //each coloumn
             fscanf(fp,"%d",&process_data[i][j]);
     }
-
 
     //done with reading file, close it
     fclose(fp);
