@@ -107,7 +107,5 @@ switch(algo_number)
     break;
 }
 
-
-
-            destroyClk(true);
+destroyClk(true);
 }
