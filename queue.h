@@ -190,6 +190,7 @@ bool isEmpty(Queue *q)
 {
     if (q->Head)
         return false;
+    
     return true;
 }
 

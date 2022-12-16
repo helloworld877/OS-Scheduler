@@ -16,12 +16,15 @@ int msgq_id;
 
 int SIGUSR1_handler(int signum);
 int SIGUSR2_handler(int signum);
+
 int main(int agrc, char *argv[])
-{
+{ 
+    
     signal(SIGUSR1, SIGUSR1_handler);
+    raise(SIGUSR1);
     initClk();
     remainingtime = atoi(argv[1]);
-
+   
     while (remainingtime > 0)
     {
         remainingtime -= 1;
@@ -30,7 +33,7 @@ int main(int agrc, char *argv[])
     }
 
     destroyClk(false);
-
+   
     return 0;
 }
 int SIGUSR1_handler(int signum)

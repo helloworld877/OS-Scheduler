@@ -188,6 +188,8 @@ int main(int argc, char *argv[])
             msg.message_data[2]=process_data[current_id][2]; //running time
             msg.message_data[3]=process_data[current_id][3]; //priority    
 
+        printf("Process with ID %d has just arrived at time = %d",msg.message_data[0], getClk());
+        printf("\n");
         send_data=msgsnd(msgq_id,&msg,sizeof(msg.message_data), !IPC_NOWAIT);
 
         if (send_data == 0)
