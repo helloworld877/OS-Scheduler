@@ -22,12 +22,13 @@ typedef struct Node
     struct Node *next;
 
     // For output file
-    int Finish_time;
-    int Waiting_time;
-    int Start_time;
-    int Stopped_time;
-    int Running_time;
-    int Remaining_time;
+    int Finish_time;    // Time at which process finished
+    int Waiting_time;   // Total waiting time
+    int Start_time;     // Time at which a process started executing
+    int Stopped_time;   // Time at which process stopped executing
+    int Remaining_time; // Remaining time for a process
+    int TA;             // Turnaround time
+    int WTA;            // Weighted turnaround time
 
 } Node;
 
@@ -228,6 +229,7 @@ bool isEmpty(Queue *q)
 {
     if (q->Head)
         return false;
+    
     return true;
 }
 
