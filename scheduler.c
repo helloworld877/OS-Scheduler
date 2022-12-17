@@ -42,12 +42,24 @@ int main(int argc, char *argv[])
     int *p_PIDS = (int *)malloc(processes_number * sizeof(int)); //For process PIDs
     int indexPID = 0;
 
+<<<<<<< Updated upstream
 //Algorithm execution
 switch(algo_number)
 {
     case 1: //Shortest Job First
 
     break;
+=======
+    // MLFQ variables
+    Queue *readyQueue1_MLFQ = createQueue(); // highest priority queue
+    Queue *readyQueue2_MLFQ = createQueue(); 
+    Queue *readyQueue3_MLFQ = createQueue(); // lowest priority queue
+
+    // Algorithm execution
+    switch (algo_number)
+    {
+    case 1: // Shortest Job First
+>>>>>>> Stashed changes
 
     case 2: //Preemptive Highest Priority First
     break;
@@ -118,6 +130,7 @@ switch(algo_number)
                 if(execv("./process.out",argv)==-1)
                     perror("Failed to execv");
             }
+<<<<<<< Updated upstream
             //First time for process to run:
             else
             {
@@ -127,6 +140,50 @@ switch(algo_number)
                 p_executing->Start_time=getClk();
                 //signal wait   
             }        
+=======
+            break;
+
+    case 4: // Multiple level Feedback Loop
+        // While there are still processes in the ready queues or there are still processes to be recieved
+        while (!isEmpty(&readyQueue1_MLFQ) || !isEmpty(&readyQueue2_MLFQ) || !isEmpty(&readyQueue3_MLFQ) || (received_number < processes_number))
+        {
+            // We will break out of the below loop when we do not receive any message and our readyQueues are not empty
+            do
+            {
+                // Do not wait for a message
+                received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
+
+                // msgrcv returns -1 if no message was received
+                if (isEmpty(&readyQueue1_MLFQ) && isEmpty(&readyQueue2_MLFQ) && isEmpty(&readyQueue3_MLFQ) && received == -1) // no processes present to perform
+                {
+                    printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    printf("Current time : %d \n", getClk());
+                    printf("Total processes received till now : %d\n", received_number);
+                    printf("Remaining processes that have still not arrived : %d", processes_number - received_number);
+                    // wait for a message
+                    received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
+                }
+
+                // if a message has been received
+                if (received != -1)
+                {
+                    printf("Process with ID %d has just arrived\n", msg.message_data[0]);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    enQueueMLFQ(readyQueue1_MLFQ,readyQueue2_MLFQ,readyQueue3_MLFQ,Node_to_insert) // MLFQ enqueue fn takes all three queues at a time
+                    received_number++;
+                }
+            } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
+
+            nexttime = getClk();
+            
+            // This below block is called every 1 second:
+            if (nexttime > time)
+            {
+                time = nexttime;
+                int PID, Status;
+            }   
+            break;
+>>>>>>> Stashed changes
         }
         //if process was stopped then resume its processing
         else if(p_executing->STATUS == STOPPED)
@@ -135,6 +192,7 @@ switch(algo_number)
         }
 
 
+<<<<<<< Updated upstream
     }
     break;
 
@@ -145,4 +203,11 @@ switch(algo_number)
 
 
 destroyClk(true);
+=======
+        }
+        
+    }
+    destroyClk(true);
+    return 0;
+>>>>>>> Stashed changes
 }

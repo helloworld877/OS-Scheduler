@@ -173,7 +173,53 @@ void enQueueSJF(Queue *q,  Node* newNode)
     }
 }
 
+<<<<<<< Updated upstream
 
+=======
+void enQueueMLFQ(Queue *q1,Queue *q2,Queue *q3,Node *newNode)
+{
+    // Create a new node
+    struct Node *tmp = newNode;
+
+    if (tmp->Priority <= 3) // priority between [0,3]
+    {
+        // If queue is empty, then new node is front and rear both
+        if (q1->Head == NULL)
+        {
+            q1->Head = tmp;
+            return;
+        }
+    }
+    else if (tmp->Priority <= 7) // priority between [4,7]
+    {
+        // If queue is empty, then new node is front and rear both
+        if (q2->Head == NULL)
+        {
+            q2->Head = tmp;
+            return;
+        }
+        // else insert at rear
+        struct Node *Trav = q2->Head;
+        while (Trav->next)
+            Trav = Trav->next;
+        Trav->next = tmp;
+    }
+    else // priority between [8,10]
+    {
+        // If queue is empty, then new node is front
+        if (q3->Head == NULL)
+        {
+            q3->Head = tmp;
+            return;
+        }
+        // else insert at rear
+        struct Node *Trav = q3->Head;
+        while (Trav->next)
+            Trav = Trav->next;
+        Trav->next = tmp;
+    }
+}
+>>>>>>> Stashed changes
 
 void printqueue(Queue *q)
 {
