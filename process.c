@@ -8,9 +8,10 @@ HOW TO USE PROCESS
 kill(pid_of_the _process,SIGUSR1/2)
 
 
-*/
+/
 
-/* Modify this file as needed*/
+/ Modify this file as needed*/
+
 int remainingtime;
 int msgq_id;
 
@@ -18,13 +19,13 @@ int SIGUSR1_handler(int signum);
 int SIGUSR2_handler(int signum);
 
 int main(int agrc, char *argv[])
-{ 
-    
+{
+    printf("HELLO\n");
     signal(SIGUSR1, SIGUSR1_handler);
-    raise(SIGUSR1);
+    // raise(SIGUSR1);
     initClk();
     remainingtime = atoi(argv[1]);
-   
+
     while (remainingtime > 0)
     {
         remainingtime -= 1;
@@ -33,11 +34,12 @@ int main(int agrc, char *argv[])
     }
 
     destroyClk(false);
-   
+
     return 0;
 }
 int SIGUSR1_handler(int signum)
 {
+    printf("received pause\n");
     struct sigaction sigact;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
@@ -47,5 +49,5 @@ int SIGUSR1_handler(int signum)
 }
 int SIGUSR2_handler(int signum)
 {
-    return;
+    printf("recieved continue\n");
 }
