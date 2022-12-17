@@ -275,6 +275,9 @@ int main(int argc, char *argv[])
             break;
 
         case 4: // Multiple level Feedback Loop
+            int quantum1 = 2;
+            int quantum2 = 3;
+            int quantum3 = 4;
             // While there are still processes in the ready queues or there are still processes to be recieved
             while (!isEmpty(readyQueue1_MLFQ) || !isEmpty(readyQueue2_MLFQ) || !isEmpty(readyQueue3_MLFQ) || (received_number < processes_number))
             {
@@ -317,7 +320,7 @@ int main(int argc, char *argv[])
                         {
                             if (!isEmpty(readyQueue3_MLFQ))
                             {
-                                p_executing=peek_queue(readyQueue);
+                                p_executing=peek_queue(readyQueue3_MLFQ);
                                 deQueue(readyQueue3_MLFQ);
                                 printf("Process in execution is with ID %d \n",p_executing->ID);
                                 if(p_executing->STATUS == WAITING)
@@ -335,17 +338,23 @@ int main(int argc, char *argv[])
 
                                         if (execv("./process.out", argv) == -1)
                                             perror("failed to execv");
-                                    }                 
+                                    }
+                                    else
+                                    {
+                                        p_PIDS[indexPID] = PID;
+                                        indexPID++;
+                                        p_executing->Start_time = getClk();
+                                    }         
                                 }
-                                else
+                                // if process was stopped then resume its processing
+                                else if (p_executing->Status == STOPPED)
                                 {
-
-                                }   
+                                    p_executing->Status = CONTINUE;
+                                }
                             }
                         }
                         else // excute q2
                         {
-
                             
                         }
                     }
