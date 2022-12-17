@@ -20,9 +20,9 @@ int SIGUSR2_handler(int signum);
 
 int main(int agrc, char *argv[])
 {
-    printf("HELLO\n");
+
     signal(SIGUSR1, SIGUSR1_handler);
-    // raise(SIGUSR1);
+    raise(SIGUSR1);
     initClk();
     remainingtime = atoi(argv[1]);
 

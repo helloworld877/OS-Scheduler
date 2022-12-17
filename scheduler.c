@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
                 // if a message has been received
                 if (received != -1)
                 {
-                    // printf("Process with ID %d has just arrived\n",msg.message_data[0]);
+                    
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
                     enQueueSJF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
                 else
                 {
                     int status;
-                    // kill(current_child_pid, SIGUSR2);
+                    //kill(current_child_pid, SIGUSR1);
+                    sleep(1);
+                    kill(current_child_pid, SIGUSR2);
                     waitpid(current_child_pid, status, 0);
                     printf("Process with ID = %d has finished", p_executing->ID);
                     printf("\n");
