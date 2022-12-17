@@ -18,7 +18,9 @@ int SIGUSR1_handler(int signum);
 int SIGUSR2_handler(int signum);
 int main(int agrc, char *argv[])
 {
+    printf("HELLO\n");
     signal(SIGUSR1, SIGUSR1_handler);
+    // raise(SIGUSR1);
     initClk();
     remainingtime = atoi(argv[1]);
 
@@ -35,6 +37,7 @@ int main(int agrc, char *argv[])
 }
 int SIGUSR1_handler(int signum)
 {
+    printf("received pause\n");
     struct sigaction sigact;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
@@ -44,5 +47,5 @@ int SIGUSR1_handler(int signum)
 }
 int SIGUSR2_handler(int signum)
 {
-    return;
+    printf("recieved continue\n");
 }
