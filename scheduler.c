@@ -389,11 +389,11 @@ int main(int argc, char *argv[])
     case 4: // Multiple level Feedback Loop
         break;
     }
+    destroyClk(false);
+    // return 0;
+    exit(-1);
 }
-destroyClk(false);
-// return 0;
-exit(-1);
-}
+
 // testing for process.c
 int SIGUSR1_handler(int signum)
 {
