@@ -210,9 +210,11 @@ int main(int argc, char *argv[])
 
 }
 
-// void clearResources(int signum)
-// {
-//     // printf("Caught Signal SIGNIT, Clearing All resources\n");
-//     // kill(clock_id, SIGKILL);
-
-// }
+void clearResources(int signum)
+{
+    printf("Caught Signal SIGNIT, Clearing All resources\n");
+    int msgq_del;
+    msgq_del = msgctl(msgq_id, IPC_RMID, 0);
+    destroyClk(true);
+    exit(0);
+}
