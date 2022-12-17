@@ -119,26 +119,21 @@ int main(int argc, char *argv[])
                     printf("////////////PID is %d///////////\n", PID);
 
                     fflush(stdout);
-                    char buff1[5]; // for ID
-                    char buff2[5]; // for Runtime
-                    // sprintf(buff1, "%d", p_executing->Runtime);
-                    // sprintf(buff2, "%d", p_executing->ID);
-                    // argv[1] = buff1;
-                    // argv[2] = buff2;
-                    char *new_argv[] = {"123", "234", (char *)0};
-                    for (int i = 0; i < 2; i++)
-                    {
-                        printf("%s\n", new_argv[i]);
-                    }
 
                     p_executing->Start_time = getClk();
 
                     if (PID == 0)
                     {
+                        char buff1[5]; // for ID
+                        char buff2[5]; // for Runtime
+                        sprintf(buff1, "%d", p_executing->Runtime);
+                        sprintf(buff2, "%d", p_executing->ID);
+                        argv[1] = buff1;
+                        argv[2] = buff2;
 
                         printf("\nI AM THE CHILLLD\n");
 
-                        if (execv("./process.out", new_argv) == -1)
+                        if (execv("./process.out", argv) == -1)
                         {
                             printf("help\n");
                             perror("Failed to execv\n");
