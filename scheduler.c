@@ -153,40 +153,27 @@ int main(int argc, char *argv[])
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
 
-                // if a message has been received
-                // printf("recieved is %d\n", received);
                 if (received != -1)
                 {
-                    printf("Process with ID %d has just arrived\n", msg.message_data[0]);
+                    // printf("Process with ID %d has just arrived\n", msg.message_data[0]);
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert->Remaining_time = Node_to_insert->Runtime;
                     enQueueHPF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
                 }
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
             nexttime = getClk();
-            // printf("next time= %d\n", nexttime);
-            // printf("currnt time=%d\n", time);
             // This below block is called every 1 second:
             if (nexttime > time)
             {
                 time = nexttime;
-
-                // If there is a process that is executing and there is another process with a higher priority we change the current executing process to it
-                if (p_executing && peek_queue(readyQueue)->ID != p_executing->ID)
-                {
-                    // changing the current running process to the highest priority process
-                    p_executing = peek_queue(readyQueue);
-                }
-                else
-                {
-                    p_executing = peek_queue(readyQueue);
-                }
+                // get head of the queue because it is the highest priority process
+                p_executing = peek_queue(readyQueue);
 
                 // First time for process to run:
                 if (p_executing->Status == WAITING)
                 {
-
                     fflush(stdout);
                     pid_t PID = fork();
                     printf("////////////PID is %d///////////\n", PID);
@@ -197,6 +184,7 @@ int main(int argc, char *argv[])
 
                     if (PID == 0)
                     {
+                        // sending parameters to child process
                         char buff1[5]; // for ID
                         char buff2[5]; // for Runtime
                         sprintf(buff1, "%d", p_executing->Runtime);
@@ -204,11 +192,10 @@ int main(int argc, char *argv[])
                         argv[1] = buff1;
                         argv[2] = buff2;
 
-                        printf("\nI AM THE CHILLLD\n");
+                        // printf("\nI AM THE CHILLLD\n");
 
                         if (execv("./process.out", argv) == -1)
                         {
-                            printf("help\n");
                             perror("Failed to execv\n");
                         }
                         exit(0);
@@ -223,30 +210,29 @@ int main(int argc, char *argv[])
                         p_executing->PID = PID;
                         // change status to stopped and make process wait for execution
                         p_executing->Status = STOPPED;
-                        kill(p_executing->PID, SIGUSR1);
+                        kill(p_executing->PID, SIGUSR1); // pause process
                     }
                 }
-                // int status;
-                // if (waitpid(p_executing->PID, &status, 0))
-                //     if (WIFEXITED(status))
-                //         printf("child exited with status of %d\n", WEXITSTATUS(status));
-                //     else
-                //         puts("child did not exit successfully");
 
-                // run the process for 1 clock cycle
-                // kill(p_executing->PID, SIGUSR1); // pause process
+                usleep(5000);
+
                 kill(p_executing->PID, SIGUSR2); // run process
-                sleep(1);                        // wait one clock cycle
-                kill(p_executing->PID, SIGUSR1); // pause process
+
+                usleep(1000000); // wait one clock cycle
+
+                p_executing->Remaining_time -= 1; // decrement waiting time
                 printf("Process in execution is with ID %d \n", p_executing->ID);
-                int x = kill(p_executing->PID, 0);
-                // printf("finished?= %d\n", x);
-                // remove the process that ended from the queue
-                if (kill(p_executing->PID, 0) != 0)
+
+                // if the process finished remove it from the queue
+                if (p_executing->Remaining_time <= 0)
                 {
                     printf("finished process %d\n ", p_executing->ID);
                     p_executing = NULL;
                     deQueue(readyQueue);
+                }
+                else
+                {
+                    kill(p_executing->PID, SIGUSR1); // pause process
                 }
             }
         }
