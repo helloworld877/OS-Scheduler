@@ -4,7 +4,11 @@
 
 enum STATUS
 {
-    RUNNING,WAITING,STOPPED,CONTINUE,FINISHED
+    RUNNING,
+    WAITING,
+    STOPPED,
+    CONTINUE,
+    FINISHED
 };
 
 typedef struct Node
@@ -13,49 +17,49 @@ typedef struct Node
     int Arrival;
     int Runtime;
     int Priority;
+    int PID;
     enum STATUS Status;
-    struct Node* next;
+    struct Node *next;
 
-    //For output file
-    int Finish_time; //Time at which process finished
-    int Waiting_time; //Total waiting time
-    int Start_time; //Time at which a process started executing
-    int Stopped_time; //Time at which process stopped executing
-    int Remaining_time; //Remaining time for a process
-    int TA; //Turnaround time
-    int WTA; //Weighted turnaround time
+    // For output file
+    int Finish_time;    // Time at which process finished
+    int Waiting_time;   // Total waiting time
+    int Start_time;     // Time at which a process started executing
+    int Stopped_time;   // Time at which process stopped executing
+    int Remaining_time; // Remaining time for a process
+    int TA;             // Turnaround time
+    int WTA;            // Weighted turnaround time
 
-}Node;
+} Node;
 
-//Note: used typedef so no need to write type "struct Node n1" with every Node declaration, instead just write "Node n1"
+// Note: used typedef so no need to write type "struct Node n1" with every Node declaration, instead just write "Node n1"
 
 typedef struct Queue
 {
     struct Node *Head;
-}Queue;
+} Queue;
 
-
-//Create new Node
-Node *newNode(int id, int arrival, int run, int p,enum STATUS stat)
+// Create new Node
+Node *newNode(int id, int arrival, int run, int p, enum STATUS stat)
 {
     struct Node *tmp = (Node *)malloc(sizeof(Node));
     tmp->ID = id;
     tmp->Arrival = arrival;
     tmp->Runtime = run;
     tmp->Priority = p;
-    tmp->Status=stat;
-    tmp->next=NULL;
+    tmp->Status = stat;
+    tmp->next = NULL;
     return tmp;
 }
 
-Queue* createQueue()
+Queue *createQueue()
 {
-    struct Queue *q=(Queue*)malloc(sizeof(Queue));
-    q->Head=NULL;
+    struct Queue *q = (Queue *)malloc(sizeof(Queue));
+    q->Head = NULL;
     return q;
 }
 
-void enQueueRR(Queue *q,  Node* newNode)
+void enQueueRR(Queue *q, Node *newNode)
 {
     // Create a new node
     struct Node *tmp = newNode;
@@ -68,7 +72,7 @@ void enQueueRR(Queue *q,  Node* newNode)
     }
 
     {
-        struct Node * Trav = q->Head;
+        struct Node *Trav = q->Head;
         while (Trav->next)
             Trav = Trav->next;
 
@@ -76,11 +80,11 @@ void enQueueRR(Queue *q,  Node* newNode)
     }
 }
 
-void enQueueHPF(Queue *q,  Node* newNode)
+void enQueueHPF(Queue *q, Node *newNode)
 {
     // Create a new node
-    struct Node* tmp = newNode;
-  
+    struct Node *tmp = newNode;
+
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
     {
@@ -97,10 +101,10 @@ void enQueueHPF(Queue *q,  Node* newNode)
 
     else
     {
-        struct Node*trav1 = q->Head;
-        struct Node*trav2 = trav1->next;
+        struct Node *trav1 = q->Head;
+        struct Node *trav2 = trav1->next;
         int flag = 0;
-        while (trav2!=NULL)
+        while (trav2 != NULL)
         {
             if (trav2->Priority > tmp->Priority)
             {
@@ -118,20 +122,14 @@ void enQueueHPF(Queue *q,  Node* newNode)
 
         if (!flag)
             trav1->next = tmp;
-        
-
     }
-
-
-    
-
 }
 
-void enQueueSJF(Queue *q,  Node* newNode)
+void enQueueSJF(Queue *q, Node *newNode)
 {
-     // Create a new node
-    struct Node* tmp = newNode;
-  
+    // Create a new node
+    struct Node *tmp = newNode;
+
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
     {
@@ -148,10 +146,10 @@ void enQueueSJF(Queue *q,  Node* newNode)
 
     else
     {
-        struct Node*trav1 = q->Head;
-        struct Node*trav2 = trav1->next;
+        struct Node *trav1 = q->Head;
+        struct Node *trav2 = trav1->next;
         int flag = 0;
-        while (trav2!=NULL)
+        while (trav2 != NULL)
         {
             if (trav2->Runtime > tmp->Runtime)
             {
@@ -169,23 +167,18 @@ void enQueueSJF(Queue *q,  Node* newNode)
 
         if (!flag)
             trav1->next = tmp;
-        
-
     }
 }
-
-
 
 void printqueue(Queue *q)
 {
-    struct Node* Trav = q->Head;
-    while(Trav)
+    struct Node *Trav = q->Head;
+    while (Trav)
     {
-        printf("%d ",Trav->ID);
-        Trav=Trav->next;
+        printf("%d ", Trav->ID);
+        Trav = Trav->next;
     }
 }
-
 
 bool isEmpty(Queue *q)
 {
@@ -199,10 +192,9 @@ void deQueue(struct Queue *q)
     if (isEmpty(q))
         return;
     q->Head = q->Head->next;
-
 }
 
-Node* peek_queue(Queue* q) //return ptr on head
+Node *peek_queue(Queue *q) // return ptr on head
 {
     return q->Head;
 }
