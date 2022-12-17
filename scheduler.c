@@ -7,9 +7,14 @@ struct message
     long m_type;
     int message_data[4];
 };
+int SIGUSR1_handler(int signum);
+int SIGUSR2_handler(int signum);
 
 int main(int argc, char *argv[])
 {
+    // ignore sigusr1
+    signal(SIGUSR1, SIGUSR1_handler);
+    signal(SIGUSR2, SIGUSR2_handler);
     // TODO: implement the scheduler.
     // TODO: upon termination release the clock resources.
     initClk();
@@ -51,6 +56,9 @@ int main(int argc, char *argv[])
 
     // MARK
     case 2: // Preemptive Highest Priority First
+
+        printf("\n\n\n\n\n\n\n\n");
+
         printf("HPF inside scheduler\n");
         // While there are still processes in the ready queue or there are still processes to be recieved
         while (!isEmpty(readyQueue) || (received_number < processes_number))
@@ -73,6 +81,7 @@ int main(int argc, char *argv[])
                 }
 
                 // if a message has been received
+                // printf("recieved is %d\n", received);
                 if (received != -1)
                 {
                     printf("Process with ID %d has just arrived\n", msg.message_data[0]);
@@ -83,6 +92,8 @@ int main(int argc, char *argv[])
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
             nexttime = getClk();
+            // printf("next time= %d\n", nexttime);
+            // printf("currnt time=%d\n", time);
             // This below block is called every 1 second:
             if (nexttime > time)
             {
@@ -102,6 +113,7 @@ int main(int argc, char *argv[])
                 // First time for process to run:
                 if (p_executing->Status == WAITING)
                 {
+
                     fflush(stdout);
                     pid_t PID = fork();
                     printf("////////////PID is %d///////////\n", PID);
@@ -109,31 +121,41 @@ int main(int argc, char *argv[])
                     fflush(stdout);
                     char buff1[5]; // for ID
                     char buff2[5]; // for Runtime
-                    sprintf(buff1, '%d', p_executing->Runtime);
-                    sprintf(buff2, '%d', p_executing->ID);
-                    argv[1] = buff1;
-                    argv[2] = buff2;
+                    // sprintf(buff1, "%d", p_executing->Runtime);
+                    // sprintf(buff2, "%d", p_executing->ID);
+                    // argv[1] = buff1;
+                    // argv[2] = buff2;
+                    char *new_argv[] = {"123", "234", (char *)0};
+                    for (int i = 0; i < 2; i++)
+                    {
+                        printf("%s\n", new_argv[i]);
+                    }
+
                     p_executing->Start_time = getClk();
+
                     if (PID == 0)
                     {
-                        fflush(stdout);
-                        printf("\nI AM THE CHILLLD\n");
-                        fflush(stdout);
 
-                        // if (execv("./process.out", argv) == -1)
-                        //     perror("Failed to execv\n");
+                        printf("\nI AM THE CHILLLD\n");
+
+                        if (execv("./process.out", new_argv) == -1)
+                        {
+                            printf("help\n");
+                            perror("Failed to execv\n");
+                        }
                         exit(0);
                     }
                     else
                     {
                         // TODO: calculate Waiting_time. Put info in output file
-                        printf("created process with PID=%d for process ID=%d\n", PID, p_executing->ID);
+                        // printf("created process with PID=%d for process ID=%d\n", PID, p_executing->ID);
                         p_PIDS[indexPID] = PID;
                         indexPID++;
                         p_executing->Start_time = getClk();
                         p_executing->PID = PID;
                         // change status to stopped and make process wait for execution
                         p_executing->Status = STOPPED;
+                        kill(p_executing->PID, SIGUSR1);
                     }
                 }
                 // int status;
@@ -144,12 +166,13 @@ int main(int argc, char *argv[])
                 //         puts("child did not exit successfully");
 
                 // run the process for 1 clock cycle
+                // kill(p_executing->PID, SIGUSR1); // pause process
                 kill(p_executing->PID, SIGUSR2); // run process
                 sleep(1);                        // wait one clock cycle
                 kill(p_executing->PID, SIGUSR1); // pause process
                 printf("Process in execution is with ID %d \n", p_executing->ID);
                 int x = kill(p_executing->PID, 0);
-                printf("finished?= %d\n", x);
+                // printf("finished?= %d\n", x);
                 // remove the process that ended from the queue
                 if (kill(p_executing->PID, 0) != 0)
                 {
@@ -250,6 +273,22 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    destroyClk(true);
-    return 0;
+    destroyClk(false);
+    // return 0;
+    exit(-1);
+}
+// testing for process.c
+int SIGUSR1_handler(int signum)
+{
+    printf("received pause\n");
+    struct sigaction sigact;
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = 0;
+    sigact.sa_handler = SIGUSR2_handler;
+    sigaction(SIGUSR2, &sigact, NULL);
+    pause();
+}
+int SIGUSR2_handler(int signum)
+{
+    printf("recieved continue\n");
 }
