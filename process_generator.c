@@ -195,26 +195,22 @@ int main(int argc, char *argv[])
     }
 
     // 7. Clear clock resources
+
     int status;
-    sleep(5);
-    int test = waitpid(scheduler_id, &status, 0);
-    printf("exit status %d\n", WEXITSTATUS(status));
+    pid = wait(&status);
     if (WIFEXITED(status))
     {
-        printf("exited normally %d\n", WIFEXITED(status));
-
         int msgq_del;
         msgq_del = msgctl(msgq_id, IPC_RMID, 0);
         destroyClk(true);
         exit(0);
     }
-    printf("BYPASSED\n");
 }
 
 void clearResources(int signum)
 {
     int msgq_del;
-    printf("Caught Signal SIGNIT, Clearing All resources\n");
+    printf("Caught Signal SIGINT, Clearing All resources\n");
     msgq_del = msgctl(msgq_id, IPC_RMID, 0);
     destroyClk(true);
     exit(0);
