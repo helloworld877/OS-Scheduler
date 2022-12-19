@@ -496,6 +496,7 @@ int main(int argc, char *argv[])
                 {
                     int PID = fork();
                     totalRuntime += p_executing->Runtime;
+                    p_executing->Remaining_time = p_executing->Runtime;
 
                     if (PID == 0)
                     {
@@ -532,12 +533,12 @@ int main(int argc, char *argv[])
                     // Write to output file
                     p_executing->Waiting_time += getClk() - p_executing->Stopped_time;
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
-
                     // continue the process
                     kill(p_PIDS[p_executing->ID - 1], SIGUSR2);   
                 }
                 sleep(1); // apply quantum
-                if (waitpid(p_PIDS[p_executing->ID - 1],&stat_loc,WNOHANG) > 0) // process is terminated i.e. remaining time =0
+                p_executing->Remaining_time -= 1;
+                if (p_executing->Remaining_time == 0 ) // process is terminated i.e. remaining time =0
                 {
                     finished_processes++;
                     // change process status
