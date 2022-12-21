@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
                 // if the process finished remove it from the queue
                 if (p_executing->Remaining_time <= 0)
                 {
-                    printf("finished process %d\n ", p_executing->ID);
+                    printf("finished process %d at time %d\n ", p_executing->ID, getClk());
                     p_executing = NULL;
                     deQueue(readyQueue);
                 }
