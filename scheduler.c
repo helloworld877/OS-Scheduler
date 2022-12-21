@@ -210,29 +210,44 @@ int main(int argc, char *argv[])
                         p_executing->PID = PID;
                         // change status to stopped and make process wait for execution
                         p_executing->Status = STOPPED;
-                        kill(p_executing->PID, SIGUSR1); // pause process
+                        kill(p_executing->PID, SIGTSTP); // pause process
                     }
                 }
 
-                usleep(5000);
-
-                kill(p_executing->PID, SIGUSR2); // run process
-
-                usleep(1000000); // wait one clock cycle
+                kill(p_executing->PID, SIGCONT); // run process
+                int run_time = getClk();
+                while (getClk() < run_time + 1)
+                {
+                    // wait one clock cycle
+                }
 
                 p_executing->Remaining_time -= 1; // decrement waiting time
                 printf("Process in execution is with ID %d \n", p_executing->ID);
 
                 // if the process finished remove it from the queue
-                if (p_executing->Remaining_time <= 0)
+                if (p_executing->Remaining_time == 1)
                 {
+                    int status;
+                    waitpid(p_executing->PID, &status, 0);
                     printf("finished process %d at time %d\n ", p_executing->ID, getClk());
-                    p_executing = NULL;
+                    // setting the finish time of the process
+                    p_executing->Finish_time = getClk();
+                    // make a dummy node to hold the value
+                    Node *dummy = p_executing;
+                    // dequeue current process
                     deQueue(readyQueue);
+                    // place it in the finished queue
+                    // change next to null
+                    dummy->next = NULL;
+                    enQueueHPF(finishedQueue, dummy);
+                    // set current executing process to null
+                    p_executing = NULL;
+                    printqueue(finishedQueue);
+                    printf("\n");
                 }
                 else
                 {
-                    kill(p_executing->PID, SIGUSR1); // pause process
+                    kill(p_executing->PID, SIGTSTP); // pause process
                 }
             }
         }
