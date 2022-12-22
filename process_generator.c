@@ -186,11 +186,6 @@ int main(int argc, char *argv[])
             msg.message_data[3] = process_data[current_id][3]; // priority
 
             send_data = msgsnd(msgq_id, &msg, sizeof(msg.message_data), !IPC_NOWAIT);
-
-            if (send_data == 0)
-            {
-                printf("message successful at time %d \n", getClk());
-            }
         }
     }
 

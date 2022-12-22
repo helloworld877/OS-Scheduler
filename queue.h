@@ -62,7 +62,7 @@ Queue *createQueue()
 void enQueueRR(Queue *q, Node *newNode)
 {
     // Create a new node
-    struct Node *tmp = newNode;
+    struct Node *tmp=newNode;
 
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
@@ -71,13 +71,14 @@ void enQueueRR(Queue *q, Node *newNode)
         return;
     }
 
-    {
-        struct Node *Trav = q->Head;
-        while (Trav->next)
-            Trav = Trav->next;
 
-        Trav->next = tmp;
-    }
+    struct Node *Trav = q->Head;
+    while (Trav->next)
+        Trav = Trav->next;
+
+    tmp->next=Trav->next;
+    Trav->next = tmp;
+
 }
 
 void enQueueHPF(Queue *q, Node *newNode)
@@ -237,7 +238,9 @@ void deQueue(struct Queue *q)
 {
     if (isEmpty(q))
         return;
+    //struct Node *tmp = q->Head;
     q->Head = q->Head->next;
+    //free(tmp);
 }
 
 Node *peek_queue(Queue *q) // return ptr on head
