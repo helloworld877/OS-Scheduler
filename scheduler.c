@@ -37,10 +37,13 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    // Output file:
+    // Output files:
     FILE *fptr;
     fptr = fopen("schedular.log", "w");
     fprintf(fptr, "#At time x process y state arr w total z remain y wait k \n");
+
+    FILE *fptr2;
+    fptr2 = fopen("scheduler.perf", "w");
 
     // Structs and general variables:
     Queue *readyQueue = createQueue();
@@ -62,8 +65,8 @@ int main(int argc, char *argv[])
 
     // statistics
     int useful_time=0;
-    int avgwta =0;
-    int avgwait =0;
+    float avgwta =0;
+    float avgwait =0;
     int total_time =0;
 
     Queue *finishedQueue = createQueue();
@@ -534,7 +537,7 @@ int main(int argc, char *argv[])
                 {
                     // change process status
                     p_executing->Status = CONTINUE;
-                    printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_PIDS[p_executing->ID - 1]);
+                    //printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_PIDS[p_executing->ID - 1]);
                     // record stopping time of process
                     p_executing->Stopped_time = getClk();
                     // Write to output file
@@ -562,8 +565,8 @@ int main(int argc, char *argv[])
                     // calculating summation of avg  weighted turn around time
                     avgwta = (avgwta + (p_executing->WTA));
                     // write to file
-                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %d  \n", p_executing->Finish_time, p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time,p_executing->TA,p_executing->WTA);
-                    if (finished_processes == processes_number) total_time= getClk();
+                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f  \n", p_executing->Finish_time, p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time,p_executing->TA,p_executing->WTA);
+                    total_time= getClk();
                 }
                 else
                 {
@@ -603,6 +606,19 @@ int main(int argc, char *argv[])
         }
                 break;
     }
+
+    float cpu_utilization = ((float)useful_time * 1.0 / total_time) * 100.0;
+    fprintf(fptr2, "CPU utilization= %.2f\n", cpu_utilization);
+
+    avgwta = (float) avgwta / (processes_number);
+    fprintf(fptr2, "Avg WTA= %.2f\n", avgwta);
+
+    avgwait = (float)avgwait / (processes_number);
+    fprintf(fptr2, "Avg Waiting= %.2f\n", avgwait);
+
+    fclose(fptr);
+    fclose(fptr2);
+
     destroyClk(false);
     return 0;
 }

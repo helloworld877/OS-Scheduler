@@ -28,7 +28,7 @@ typedef struct Node
     int Stopped_time;   // Time at which process stopped executing
     int Remaining_time; // Remaining time for a process
     int TA;             // Turnaround time
-    int WTA;            // Weighted turnaround time
+    float WTA;            // Weighted turnaround time
 
 } Node;
 
