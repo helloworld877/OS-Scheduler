@@ -406,8 +406,7 @@ int main(int argc, char *argv[])
                         p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
 
                         // write to file
-                        fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
-
+                        fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time,p_executing->TA,p_executing->WTA);
                         printf("Finished process with ID %d at time %d \n", p_executing->ID, p_executing->Finish_time);
                         finishedProcesses++;
 
@@ -446,7 +445,7 @@ int main(int argc, char *argv[])
                     p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
 
                     // write to file
-                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
+                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time,p_executing->TA,p_executing->WTA);
 
                     printf("Finished process with ID %d at time %d \n", p_executing->ID, p_executing->Finish_time);
                     finishedProcesses++;
