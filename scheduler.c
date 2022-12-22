@@ -130,9 +130,9 @@ int main(int argc, char *argv[])
         // MARK
     case 2: // Preemptive Highest Priority First
 
-        printf("\n\n\n\n\n\n\n\n");
+        // printf("\n\n\n\n\n\n\n\n");
 
-        printf("HPF inside scheduler\n");
+        // printf("HPF inside scheduler\n");
         // While there are still processes in the ready queue or there are still processes to be recieved
         while (!isEmpty(readyQueue) || (received_number < processes_number))
         {
@@ -145,10 +145,10 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
-                    printf("Ready queue is empty. Waiting to receive a new process...\n");
-                    printf("Current time : %d \n", getClk());
-                    printf("Total processes received till now : %d\n", received_number);
-                    printf("Remaining processes that have still not arrived : %d\n", processes_number - received_number);
+                    // printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    // printf("Current time : %d \n", getClk());
+                    // printf("Total processes received till now : %d\n", received_number);
+                    // printf("Remaining processes that have still not arrived : %d\n", processes_number - received_number);
                     // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
@@ -169,14 +169,16 @@ int main(int argc, char *argv[])
             {
                 time = nexttime;
                 // get head of the queue because it is the highest priority process
+                printf("clock is %d\n", getClk());
                 p_executing = peek_queue(readyQueue);
-
+                printqueue(readyQueue);
+                printf("\n");
                 // First time for process to run:
                 if (p_executing->Status == WAITING)
                 {
                     fflush(stdout);
                     pid_t PID = fork();
-                    printf("////////////PID is %d///////////\n", PID);
+                    // printf("////////////PID is %d///////////\n", PID);
 
                     fflush(stdout);
 
@@ -185,12 +187,9 @@ int main(int argc, char *argv[])
                     if (PID == 0)
                     {
                         // sending parameters to child process
-                        char buff1[5]; // for ID
-                        char buff2[5]; // for Runtime
+                        char buff1[5]; // for Runtime
                         sprintf(buff1, "%d", p_executing->Runtime);
-                        sprintf(buff2, "%d", p_executing->ID);
                         argv[1] = buff1;
-                        argv[2] = buff2;
 
                         // printf("\nI AM THE CHILLLD\n");
 
@@ -220,14 +219,24 @@ int main(int argc, char *argv[])
                 {
                     // wait one clock cycle
                 }
-
+                kill(p_executing->PID, SIGTSTP);  // pause process
                 p_executing->Remaining_time -= 1; // decrement waiting time
+
                 printf("Process in execution is with ID %d \n", p_executing->ID);
+                printf("%d\n", getClk());
+                printf("%d\n", p_executing->Remaining_time);
 
                 // if the process finished remove it from the queue
-                if (p_executing->Remaining_time == 1)
+                if (p_executing->Remaining_time == 0)
                 {
                     int status;
+                    // int run_time = getClk();
+                    // while (getClk() < run_time + 1)
+                    // {
+                    //     // wait one clock cycle
+                    // }
+                    kill(p_executing->PID, SIGCONT); // run process
+
                     waitpid(p_executing->PID, &status, 0);
                     printf("finished process %d at time %d\n ", p_executing->ID, getClk());
                     // setting the finish time of the process
@@ -239,15 +248,11 @@ int main(int argc, char *argv[])
                     // place it in the finished queue
                     // change next to null
                     dummy->next = NULL;
-                    enQueueHPF(finishedQueue, dummy);
+                    enQueueRR(finishedQueue, dummy);
                     // set current executing process to null
                     p_executing = NULL;
-                    printqueue(finishedQueue);
-                    printf("\n");
-                }
-                else
-                {
-                    kill(p_executing->PID, SIGTSTP); // pause process
+                    // printqueue(finishedQueue);
+                    // printf("\n");
                 }
             }
         }
