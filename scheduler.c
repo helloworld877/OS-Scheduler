@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
                 received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
 
                 // msgrcv returns -1 if no message was received
-                if (isEmpty(readyQueue) && received == -1) // no processes present to perform
+                if ((received_number==finishedProcesses) && received == -1) // no processes present to perform
                 {
                     printf("Ready queue is empty. Waiting to receive a new process...\n");
                     printf("Current time : %d \n", getClk());
@@ -346,13 +346,12 @@ int main(int argc, char *argv[])
                     // change process status
                     p_executing->Status = CONTINUE;
                     printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_executing->PID);
-                    printf("Reamaining time of %d is %d\n",p_executing->ID,p_executing->Remaining_time);
+                    printf("Remaining time of %d is %d\n",p_executing->ID,p_executing->Remaining_time);
 
                     // Write to output file
                     p_executing->Waiting_time += getClk() - p_executing->Stopped_time;
                     fprintf(fptr, "At time  %d  process %d resumed arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
 
-                    // continue the
                 }
 
                 /* Two possibilities:
@@ -372,7 +371,7 @@ int main(int argc, char *argv[])
 
                     // stop the process
                     printf("Stopping process with ID %d and PID %d...\n", p_executing->ID, p_executing->PID);
-                    printf("Reamaining time of %d is %d\n",p_executing->ID,p_executing->Remaining_time);
+                    printf("Remaining time of %d is %d\n",p_executing->ID,p_executing->Remaining_time);
                     kill(p_executing->PID, SIGSTOP);
                     printf("Process with ID %d and PID %d has stopped\n", p_executing->ID, p_executing->PID);
 
@@ -465,7 +464,93 @@ int main(int argc, char *argv[])
         break;
 
     case 4: // Multiple level Feedback Loop
+        //int quantum1 = 2;
+        //int quantum2 = 3;
+        //int quantum3 = 4;
+        // While there are still processes in the ready queues or there are still processes to be recieved
+        while (!isEmpty(readyQueue1_MLFQ) || !isEmpty(readyQueue2_MLFQ) || !isEmpty(readyQueue3_MLFQ) || (received_number < processes_number))
+        {
+            // We will break out of the below loop when we do not receive any message and our readyQueues are not empty
+            do
+            {
+                // Do not wait for a message
+                received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
 
+                // msgrcv returns -1 if no message was received
+                if (isEmpty(readyQueue1_MLFQ) && isEmpty(readyQueue2_MLFQ) && isEmpty(readyQueue3_MLFQ) && received == -1) // no processes present to perform
+                {
+                    printf("All queues are empty. Waiting to receive a new process...\n");
+                    printf("Current time : %d \n", getClk());
+                    printf("Total processes received till now : %d\n", received_number);
+                    printf("Remaining processes that have still not arrived : %d", processes_number - received_number);
+                    // wait for a message
+                    received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
+                }
+
+                // if a message has been received
+                if (received != -1)
+                {
+                    printf("Process with ID %d has just arrived\n", msg.message_data[0]);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    enQueueMLFQ(readyQueue1_MLFQ, readyQueue2_MLFQ, readyQueue3_MLFQ, Node_to_insert); // MLFQ enqueue fn takes all three queues at a time
+                    received_number++;
+                }
+            } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
+            nexttime = getClk();
+            if (nexttime > time) // this block will be called every 1 sec
+            {
+                time = getClk();
+                int pid, status;
+
+                // order of queues to be excuted -> q1 , q2, q3
+                if (isEmpty(readyQueue1_MLFQ)) // if q1 is empty excute q2
+                {
+                    if (isEmpty(readyQueue2_MLFQ)) // if q1 is empty excute q2
+                    {
+                        if (!isEmpty(readyQueue3_MLFQ))
+                        {
+                            p_executing = peek_queue(readyQueue3_MLFQ);
+                            deQueue(readyQueue3_MLFQ);
+                            printf("Process in execution is with ID %d \n", p_executing->ID);
+                            if (p_executing->Status == WAITING)
+                            {
+                                int PID = fork();
+                                if (PID == 0)
+                                {
+                                    char buff1[5]; // for ID
+                                    char buff2[5]; // for Runtime
+                                    sprintf(buff1, "%d", p_executing->ID);
+                                    sprintf(buff2, "%d", p_executing->Runtime);
+                                    argv[1] = buff1;
+                                    argv[2] = buff2;
+                                    p_executing->Start_time = getClk();
+
+                                    if (execv("./process.out", argv) == -1)
+                                        perror("failed to execv");
+                                }
+                                else
+                                {
+                                    p_PIDS[indexPID] = PID;
+                                    indexPID++;
+                                    p_executing->Start_time = getClk();
+                                }
+                            }
+                            // if process was stopped then resume its processing
+                            else if (p_executing->Status == STOPPED)
+                            {
+                                p_executing->Status = CONTINUE;
+                            }
+                        }
+                    }
+                    else // excute q2
+                    {
+                    }
+                }
+                else // excute q1
+                {
+                }
+            }
+        }
        break; 
     }
     destroyClk(false);
