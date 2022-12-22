@@ -24,12 +24,12 @@ int main(int agrc, char *argv[])
     // raise(SIGUSR1);
     initClk();
     remainingtime = atoi(argv[1]);
-
+    int curr_time = getClk();
     while (remainingtime > 0)
     {
+        while(getClk() != curr_time+1){}
         remainingtime -= 1;
-        // assuming that the clock is 1 second
-        sleep(1);
+        curr_time = getClk();
     }
 
     destroyClk(false);
@@ -38,7 +38,7 @@ int main(int agrc, char *argv[])
 }
 int SIGUSR1_handler(int signum)
 {
-    printf("received pause\n");
+    //printf("received pause\n");
     struct sigaction sigact;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
@@ -48,5 +48,5 @@ int SIGUSR1_handler(int signum)
 }
 int SIGUSR2_handler(int signum)
 {
-    printf("recieved continue\n");
+    //printf("recieved continue\n");
 }

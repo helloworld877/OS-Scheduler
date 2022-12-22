@@ -546,7 +546,10 @@ int main(int argc, char *argv[])
                     // continue the process
                     kill(p_PIDS[p_executing->ID - 1], SIGUSR2);   
                 }
-                sleep(1); // apply quantum
+                // apply quantum
+                int curr_time = getClk();
+                while(getClk() != curr_time+1){}
+
                 p_executing->Remaining_time -= 1;
                 if (p_executing->Remaining_time == 0 ) // process is terminated i.e. remaining time =0
                 {
