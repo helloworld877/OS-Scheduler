@@ -13,41 +13,28 @@ kill(pid_of_the _process,SIGUSR1/2)
 / Modify this file as needed*/
 
 int remainingtime;
-int msgq_id;
 
-int SIGUSR1_handler(int signum);
-int SIGUSR2_handler(int signum);
+
+
 
 int main(int agrc, char *argv[])
-{
-
-    signal(SIGUSR1, SIGUSR1_handler);
-    raise(SIGUSR1);
+{   
     initClk();
+    
     remainingtime = atoi(argv[1]);
 
+    int curr_time = getClk();
     while (remainingtime > 0)
     {
+        while(getClk()!= curr_time+1)       
+        {}
         remainingtime -= 1;
         // assuming that the clock is 1 second
-        sleep(1);
+        curr_time = getClk();
     }
 
     destroyClk(false);
-
+    
     return 0;
 }
-int SIGUSR1_handler(int signum)
-{
-    printf("received pause\n");
-    struct sigaction sigact;
-    sigemptyset(&sigact.sa_mask);
-    sigact.sa_flags = 0;
-    sigact.sa_handler = SIGUSR2_handler;
-    sigaction(SIGUSR2, &sigact, NULL);
-    pause();
-}
-int SIGUSR2_handler(int signum)
-{
-    printf("recieved continue\n");
-}
+

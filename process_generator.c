@@ -14,10 +14,12 @@ struct message
     int message_data[4];
 };
 void clearResources(int signum);
+int SIGTSTPP_handler(int signum);
 
 int main(int argc, char *argv[])
 {
     signal(SIGINT, clearResources);
+    signal(SIGTSTP, SIGTSTPP_handler);
     // TODO Initialization
     // 1. Read the input files.
     /*
@@ -152,7 +154,7 @@ int main(int argc, char *argv[])
     initClk();
     // To get time use this function.
     int x = getClk();
-    printf("Current Time is %d\n", x);
+    // printf("Current Time is %d\n", x);
 
     // TODO Generation Main Loop
     // 5. Create a data structure for processes and provide it with its parameters.
@@ -184,19 +186,14 @@ int main(int argc, char *argv[])
             msg.message_data[1] = process_data[current_id][1]; // arrival time
             msg.message_data[2] = process_data[current_id][2]; // running time
             msg.message_data[3] = process_data[current_id][3]; // priority
-            printf("Process with ID %d has just arrived\n",msg.message_data[0]);
             send_data = msgsnd(msgq_id, &msg, sizeof(msg.message_data), !IPC_NOWAIT);
 
-            if (send_data == 0)
-            {
-                printf("message successful at time %d \n", getClk());
-            }
+           
         }
     }
 
     // 7. Clear clock resources
     int status;
-    sleep(5);
     int test = waitpid(scheduler_id, &status, 0);
     printf("exit status %d\n", WEXITSTATUS(status));
     if (WIFEXITED(status))
@@ -218,4 +215,10 @@ void clearResources(int signum)
     msgq_del = msgctl(msgq_id, IPC_RMID, 0);
     destroyClk(true);
     exit(0);
+}
+
+
+int SIGTSTPP_handler(int signum)
+{
+    return 0;
 }

@@ -36,7 +36,9 @@ typedef struct Node
 
 typedef struct Queue
 {
+    struct Node * Last;
     struct Node *Head;
+    
 } Queue;
 
 // Create new Node
@@ -59,25 +61,46 @@ Queue *createQueue()
     return q;
 }
 
+
 void enQueueRR(Queue *q, Node *newNode)
 {
+
+
+    // Node *tmp = newNode;
+    // if (q->Head == NULL)
+    //     {
+    //         q->Head = tmp;
+    //         return;
+    //     }
+        
+    
+
+    // Node * trav = q->Head;
+
+    // while (trav->next)
+    //     trav = trav->next;
+    
+    // trav->next = tmp;
+    // return;
+    
     // Create a new node
-    struct Node *tmp = newNode;
+    Node *tmp = newNode;
 
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
     {
         q->Head = tmp;
+        q->Last = q->Head;
         return;
     }
 
-    {
-        struct Node *Trav = q->Head;
-        while (Trav->next)
-            Trav = Trav->next;
+    q->Last->next = tmp;
+    q->Last = tmp; 
+    return;
 
-        Trav->next = tmp;
-    }
+    
+    
+    
 }
 
 void enQueueHPF(Queue *q, Node *newNode)

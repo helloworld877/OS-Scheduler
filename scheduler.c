@@ -7,14 +7,10 @@ struct message
     long m_type;
     int message_data[4];
 };
-int SIGUSR1_handler(int signum);
-int SIGUSR2_handler(int signum);
+
 
 int main(int argc, char *argv[])
 {
-    // ignore sigusr1
-    signal(SIGUSR1, SIGUSR1_handler);
-    signal(SIGUSR2, SIGUSR2_handler);
     // TODO: implement the scheduler.
     // TODO: upon termination release the clock resources.
     initClk();
@@ -59,6 +55,8 @@ int main(int argc, char *argv[])
     Queue *readyQueue3_MLFQ = createQueue(); // lowest priority queue
     Queue *finishedQueue = createQueue();
     int totalRuntime = 0;
+    int finished_processes[processes_number];
+    int index = 0;
 
     // Algorithm execution
     switch (algo_number)
@@ -76,11 +74,11 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
-                    printf("Ready queue is empty. Waiting to receive a new process...\n");
-                    printf("Current time : %d \n", getClk());
-                    printf("Total processes received till now : %d\n", received_number);
-                    printf("Remaining processes that have still not arrived: %d", processes_number - received_number);
-                    printf("\n");
+                    // printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    // printf("Current time : %d \n", getClk());
+                    // printf("Total processes received till now : %d\n", received_number);
+                    // printf("Remaining processes that have still not arrived: %d", processes_number - received_number);
+                    // printf("\n");
                     // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
@@ -102,10 +100,11 @@ int main(int argc, char *argv[])
                 int current_child_pid;
                 p_executing = peek_queue(readyQueue);
                 int burst_time = p_executing->Runtime;
+                p_executing->Remaining_time = burst_time;
+                p_executing->Waiting_time = getClk() - p_executing->Arrival;
                 char buff1[5];
                 sprintf(buff1, "%d", burst_time);
                 argv[1] = buff1;
-                printf("%d", atoi(argv[1]));
                 deQueue(readyQueue);
                 pid = fork();
                 if (pid != 0)
@@ -118,12 +117,28 @@ int main(int argc, char *argv[])
                 else
                 {
                     int status;
-                    //kill(current_child_pid, SIGUSR1);
-                    sleep(1);
-                    kill(current_child_pid, SIGUSR2);
-                    waitpid(current_child_pid, status, 0);
-                    printf("Process with ID = %d has finished", p_executing->ID);
-                    printf("\n");
+                    // kill(current_child_pid, SIGSTOP);
+                    // kill(current_child_pid, SIGCONT);
+                    // printf("Process with ID = %d has started at time %d ", p_executing->ID, getClk());
+                    // printf("\n");
+                    fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
+                    p_executing->ID, p_executing->Arrival, 
+                    p_executing->Runtime, p_executing->Remaining_time,
+                    p_executing->Waiting_time);
+                    p_executing->Finish_time = getClk();
+                    finished_processes[index] = getClk();
+                    p_executing->Remaining_time = 0;
+                    wait(status);
+                    // printf("Process with ID = %d has finished at time %d ", p_executing->ID, getClk());
+                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
+                    p_executing->ID, p_executing->Arrival, 
+                    p_executing->Runtime, p_executing->Remaining_time,
+                    p_executing->Waiting_time);
+                    p_executing->next = NULL;
+                    enQueueRR(finishedQueue, p_executing);
+                    
+                    
+                
                 }
             }
         }
@@ -540,23 +555,12 @@ int main(int argc, char *argv[])
             }
         }
     }
+   
+    printf("\n");
+    printqueue(finishedQueue);
+    printf("\n");
     destroyClk(false);
     // return 0;
     exit(-1);
 }
 
-// testing for process.c
-int SIGUSR1_handler(int signum)
-{
-    printf("received pause\n");
-    struct sigaction sigact;
-    sigemptyset(&sigact.sa_mask);
-    sigact.sa_flags = 0;
-    sigact.sa_handler = SIGUSR2_handler;
-    sigaction(SIGUSR2, &sigact, NULL);
-    pause();
-}
-int SIGUSR2_handler(int signum)
-{
-    printf("recieved continue\n");
-}
