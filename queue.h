@@ -28,7 +28,7 @@ typedef struct Node
     int Stopped_time;   // Time at which process stopped executing
     int Remaining_time; // Remaining time for a process
     int TA;             // Turnaround time
-    int WTA;            // Weighted turnaround time
+    float WTA;            // Weighted turnaround time
 
 } Node;
 
@@ -238,9 +238,7 @@ void deQueue(struct Queue *q)
 {
     if (isEmpty(q))
         return;
-    //struct Node *tmp = q->Head;
     q->Head = q->Head->next;
-    //free(tmp);
 }
 
 Node *peek_queue(Queue *q) // return ptr on head
