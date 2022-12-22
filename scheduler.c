@@ -60,6 +60,12 @@ int main(int argc, char *argv[])
     int *original_priorities = (int *)malloc(processes_number * sizeof(int));
     Queue *tempQueue = createQueue(); // used to in case a new processes is inserted at a higher level and nedd to be excuted first
 
+    // statistics
+    int useful_time=0;
+    int avgwta =0;
+    int avgwait =0;
+    int total_time =0;
+
     Queue *finishedQueue = createQueue();
     int totalRuntime = 0;
 
@@ -348,7 +354,7 @@ int main(int argc, char *argv[])
                 {
                     // change process status
                     p_executing->Status = CONTINUE;
-                    printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_PIDS[p_executing->ID - 1]);
+                    //printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_PIDS[p_executing->ID - 1]);
 
                     // Write to output file
                     p_executing->Waiting_time += getClk() - p_executing->Stopped_time;
@@ -465,10 +471,10 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
-                    printf("Ready queue is empty. Waiting to receive a new process...\n");
-                    printf("Current time : %d \n", getClk());
-                    printf("Total processes received till now : %d\n", received_number);
-                    printf("Remaining processes that have still not arrived : %d \n", processes_number - received_number);
+                    //printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    //printf("Current time : %d \n", getClk());
+                    //printf("Total processes received till now : %d\n", received_number);
+                    //printf("Remaining processes that have still not arrived : %d \n", processes_number - received_number);
                     // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
@@ -490,7 +496,7 @@ int main(int argc, char *argv[])
                 deQueue(readyQueue); // dequeuing the proccess with the highest priority currently i.e. excuting the highest level existing
                 
                 current_level = p_executing->Priority; // updating current level
-                printf("Current level: %d\n", current_level);
+                //printf("Current level: %d\n", current_level);
 
                 if (p_executing->Status == WAITING)
                 {
@@ -517,7 +523,7 @@ int main(int argc, char *argv[])
                         original_priorities[p_executing->ID - 1] = p_executing->Priority;
                         p_PIDS[p_executing->ID - 1] = PID;
                         p_executing->Start_time = getClk();
-                        printf("Starting process with ID %d and PID %d\n", p_executing->ID, PID);
+                        //printf("Starting process with ID %d and PID %d\n", p_executing->ID, PID);
 
                         // Write to output file:
                         p_executing->Waiting_time = p_executing->Start_time - p_executing->Arrival;
@@ -529,10 +535,11 @@ int main(int argc, char *argv[])
                     // change process status
                     p_executing->Status = CONTINUE;
                     printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_PIDS[p_executing->ID - 1]);
-
+                    // record stopping time of process
+                    p_executing->Stopped_time = getClk();
                     // Write to output file
                     p_executing->Waiting_time += getClk() - p_executing->Stopped_time;
-                    fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
+                    fprintf(fptr, "At time  %d  process %d resumed arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
                     // continue the process
                     kill(p_PIDS[p_executing->ID - 1], SIGUSR2);   
                 }
@@ -544,11 +551,19 @@ int main(int argc, char *argv[])
                     // change process status
                     p_executing->Status = FINISHED;
                     p_executing->Finish_time = getClk();
-                    printf("process %d has finished\n", p_executing->ID);
-                    /* if (finished_processes == processes_number)
-                    {
-                        // statistics
-                    } */
+                    //printf("process %d has finished\n", p_executing->ID);
+                    // Calculate TA and WTA
+                    p_executing->TA = p_executing->Finish_time - p_executing->Arrival;
+                    p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
+                    
+                    useful_time = p_executing->Runtime + useful_time;
+                    // calculating summation of avg waiting time
+                    avgwait = (avgwait + (p_executing->Waiting_time));
+                    // calculating summation of avg  weighted turn around time
+                    avgwta = (avgwta + (p_executing->WTA));
+                    // write to file
+                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %d  \n", p_executing->Finish_time, p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time,p_executing->TA,p_executing->WTA);
+                    if (finished_processes == processes_number) total_time= getClk();
                 }
                 else
                 {
@@ -557,12 +572,14 @@ int main(int argc, char *argv[])
                     usleep(5000);
                     // change process status
                     p_executing->Status = STOPPED;
-                    printf("process %d has stopped\n", p_executing->ID);
+                    //printf("process %d has stopped\n", p_executing->ID);
+                    fprintf(fptr, "At time  %d  process %d stopped arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
                     
                     if (current_level == 10) // if I am at the lowest level
                     {
                         // return process to its original priority
                         p_executing->Priority = original_priorities[p_executing->ID - 1];
+                        p_executing->next = NULL;
                         enQueueHPF(tempQueue,p_executing);
                         if (isEmpty(readyQueue))
                         {
@@ -570,6 +587,7 @@ int main(int argc, char *argv[])
                             {
                                 p_executing = peek_queue(tempQueue);
                                 deQueue(tempQueue);
+                                p_executing->next = NULL;
                                 enQueueHPF(readyQueue,p_executing);
                             }
                         }
@@ -577,6 +595,7 @@ int main(int argc, char *argv[])
                     else
                     {   // degrade priority to execute in another level
                         p_executing->Priority = p_executing->Priority +1;
+                        p_executing->next = NULL;
                         enQueueHPF(readyQueue,p_executing);
                     }
                 }
@@ -592,7 +611,7 @@ int main(int argc, char *argv[])
 // testing for process.c
 int SIGUSR1_handler(int signum)
 {
-    printf("received pause\n");
+    //printf("received pause\n");
     struct sigaction sigact;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
@@ -602,5 +621,5 @@ int SIGUSR1_handler(int signum)
 }
 int SIGUSR2_handler(int signum)
 {
-    printf("recieved continue\n");
+    //printf("recieved continue\n");
 }
