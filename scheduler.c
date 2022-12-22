@@ -134,14 +134,16 @@ int main(int argc, char *argv[])
 
         // printf("HPF inside scheduler\n");
         // While there are still processes in the ready queue or there are still processes to be recieved
+        bool first_time = true;
         while (!isEmpty(readyQueue) || (received_number < processes_number))
         {
+
             // We will break out of the below loop when we do not receive any message and our readyQueue is not empty
             do
             {
                 // Do not wait for a message
                 received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
-
+                // printf("message timer: %d\n", getClk());
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
@@ -155,7 +157,7 @@ int main(int argc, char *argv[])
 
                 if (received != -1)
                 {
-                    // printf("Process with ID %d has just arrived\n", msg.message_data[0]);
+                    printf("Process with ID %d has just arrived at time %d\n", msg.message_data[0], getClk());
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
                     Node_to_insert->Remaining_time = Node_to_insert->Runtime;
                     enQueueHPF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
@@ -164,14 +166,39 @@ int main(int argc, char *argv[])
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
             nexttime = getClk();
+
             // This below block is called every 1 second:
-            if (nexttime > time)
+            if (1 || nexttime > time)
             {
+                // printf("next time: %d", nexttime);
                 time = nexttime;
                 // get head of the queue because it is the highest priority process
-                printf("clock is %d\n", getClk());
+
+                // if (!first_time)
+                // {
+
+                //     if (p_executing->ID != peek_queue(readyQueue)->ID)
+                //     {
+
+                //         p_executing = peek_queue(readyQueue);
+
+                //         p_executing->Remaining_time -= 1;
+                //         printf("changed to process %d and remaining time is %d\n", p_executing->ID, p_executing->Remaining_time);
+                //     }
+                //     else
+                //     {
+                //         p_executing = peek_queue(readyQueue);
+                //         printf("didn't change\n");
+                //     }
+                // }
+                // else
+                // {
+                //     p_executing = peek_queue(readyQueue);
+                //     first_time = false;
+                // }
+
                 p_executing = peek_queue(readyQueue);
-                printqueue(readyQueue);
+                // printqueue(readyQueue);
                 printf("\n");
                 // First time for process to run:
                 if (p_executing->Status == WAITING)
@@ -213,32 +240,19 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                kill(p_executing->PID, SIGCONT); // run process
-                int run_time = getClk();
-                while (getClk() < run_time + 1)
-                {
-                    // wait one clock cycle
-                }
-                kill(p_executing->PID, SIGTSTP);  // pause process
-                p_executing->Remaining_time -= 1; // decrement waiting time
-
-                printf("Process in execution is with ID %d \n", p_executing->ID);
-                printf("%d\n", getClk());
-                printf("%d\n", p_executing->Remaining_time);
-
                 // if the process finished remove it from the queue
-                if (p_executing->Remaining_time == 0)
+                if (p_executing->Remaining_time == 1)
                 {
                     int status;
-                    // int run_time = getClk();
-                    // while (getClk() < run_time + 1)
-                    // {
-                    //     // wait one clock cycle
-                    // }
+                    int run_time = getClk();
                     kill(p_executing->PID, SIGCONT); // run process
+                    while (getClk() < run_time + 1)
+                    {
+                        // wait one clock cycle
+                    }
 
-                    waitpid(p_executing->PID, &status, 0);
-                    printf("finished process %d at time %d\n ", p_executing->ID, getClk());
+                    // waitpid(p_executing->PID, &status, 0);
+                    // printf("finished process %d at time %d\n ", p_executing->ID, getClk());
                     // setting the finish time of the process
                     p_executing->Finish_time = getClk();
                     // make a dummy node to hold the value
@@ -250,10 +264,24 @@ int main(int argc, char *argv[])
                     dummy->next = NULL;
                     enQueueRR(finishedQueue, dummy);
                     // set current executing process to null
-                    p_executing = NULL;
                     // printqueue(finishedQueue);
                     // printf("\n");
                 }
+                else
+                {
+
+                    kill(p_executing->PID, SIGCONT); // run process
+                    int run_time = getClk();
+                    while (getClk() < run_time + 1)
+                    {
+                        // wait one clock cycle
+                    }
+                    kill(p_executing->PID, SIGTSTP);  // pause process
+                    p_executing->Remaining_time -= 1; // decrement waiting time
+                }
+                // printf("Process in execution is with ID %d \n", p_executing->ID);
+                // printf("%d\n", getClk());
+                // printf("%d\n", p_executing->Remaining_time);
             }
         }
 
