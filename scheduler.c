@@ -135,9 +135,9 @@ int main(int argc, char *argv[])
         // printf("HPF inside scheduler\n");
         // While there are still processes in the ready queue or there are still processes to be recieved
         bool first_time = true;
+        bool res = false;
         while (!isEmpty(readyQueue) || (received_number < processes_number))
         {
-
             // We will break out of the below loop when we do not receive any message and our readyQueue is not empty
             do
             {
@@ -162,40 +162,34 @@ int main(int argc, char *argv[])
                     Node_to_insert->Remaining_time = Node_to_insert->Runtime;
                     enQueueHPF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
+                    res = true;
                 }
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
             nexttime = getClk();
 
             // This below block is called every 1 second:
-            if (1 || nexttime > time)
+            if (nexttime > time)
             {
-                // printf("next time: %d", nexttime);
+                printf("entered at time: %d\n", nexttime);
+                printqueue(readyQueue);
+                printf("\n");
+
                 time = nexttime;
-                // get head of the queue because it is the highest priority process
-
-                // if (!first_time)
-                // {
-
-                //     if (p_executing->ID != peek_queue(readyQueue)->ID)
-                //     {
-
-                //         p_executing = peek_queue(readyQueue);
-
-                //         p_executing->Remaining_time -= 1;
-                //         printf("changed to process %d and remaining time is %d\n", p_executing->ID, p_executing->Remaining_time);
-                //     }
-                //     else
-                //     {
-                //         p_executing = peek_queue(readyQueue);
-                //         printf("didn't change\n");
-                //     }
-                // }
-                // else
-                // {
-                //     p_executing = peek_queue(readyQueue);
-                //     first_time = false;
-                // }
+                res = false;
+                if (!first_time)
+                {
+                    kill(p_executing->PID, SIGTSTP); // pause process
+                    // if (p_executing->ID != peek_queue(readyQueue)->ID)
+                    // {
+                    //     p_executing = peek_queue(readyQueue);
+                    //     p_executing->Remaining_time -= 1;
+                    // }
+                }
+                else
+                {
+                    first_time = false;
+                }
 
                 p_executing = peek_queue(readyQueue);
                 // printqueue(readyQueue);
@@ -244,15 +238,17 @@ int main(int argc, char *argv[])
                 if (p_executing->Remaining_time == 1)
                 {
                     int status;
-                    int run_time = getClk();
-                    kill(p_executing->PID, SIGCONT); // run process
-                    while (getClk() < run_time + 1)
-                    {
-                        // wait one clock cycle
-                    }
 
+                    kill(p_executing->PID, SIGCONT); // run process
+                    int run_time = getClk();
+                    // while (run_time + 1 > getClk())
+                    // {
+                    //     // wait one clock cycle
+                    // }
+                    // printf("clock after pause: %d \n", getClk());
+                    sleep(1);
                     // waitpid(p_executing->PID, &status, 0);
-                    // printf("finished process %d at time %d\n ", p_executing->ID, getClk());
+                    printf("finished process %d at time %d\n ", p_executing->ID, getClk());
                     // setting the finish time of the process
                     p_executing->Finish_time = getClk();
                     // make a dummy node to hold the value
@@ -263,6 +259,9 @@ int main(int argc, char *argv[])
                     // change next to null
                     dummy->next = NULL;
                     enQueueRR(finishedQueue, dummy);
+                    // p_executing = peek_queue(readyQueue);
+                    // p_executing->Remaining_time -= 1;
+
                     // set current executing process to null
                     // printqueue(finishedQueue);
                     // printf("\n");
@@ -271,17 +270,26 @@ int main(int argc, char *argv[])
                 {
 
                     kill(p_executing->PID, SIGCONT); // run process
+                    // printf("clock before pause: %d \n", getClk());
                     int run_time = getClk();
-                    while (getClk() < run_time + 1)
-                    {
-                        // wait one clock cycle
-                    }
-                    kill(p_executing->PID, SIGTSTP);  // pause process
+                    printf("clock before pause: %d \n", getClk());
+
+                    // while (run_time + 1 > getClk())
+                    // {
+                    //     // wait one clock cycle
+                    // }
+                    sleep(1);
+                    printf("clock after pause: %d \n", getClk());
+
+                    // sleep(1);
+                    // kill(p_executing->PID, SIGTSTP); // pause process
+                    // nexttime = getClk();
+                    // time = nexttime;
                     p_executing->Remaining_time -= 1; // decrement waiting time
                 }
-                // printf("Process in execution is with ID %d \n", p_executing->ID);
-                // printf("%d\n", getClk());
-                // printf("%d\n", p_executing->Remaining_time);
+                printf("Process in execution is with ID %d \n", p_executing->ID);
+                printf("clock: %d\n", getClk());
+                printf("remaining time %d\n", p_executing->Remaining_time);
             }
         }
 
@@ -298,7 +306,7 @@ int main(int argc, char *argv[])
                 received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
 
                 // msgrcv returns -1 if no message was received
-                if ((received_number==finishedProcesses) && received == -1) // no processes present to perform
+                if ((received_number == finishedProcesses) && received == -1) // no processes present to perform
                 {
                     printf("Ready queue is empty. Waiting to receive a new process...\n");
                     printf("Current time : %d \n", getClk());
@@ -361,13 +369,13 @@ int main(int argc, char *argv[])
                     // First time for process to run:
                     else
                     {
-                        kill(PID, SIGSTOP); //pause process
-                        p_executing->PID=PID;
+                        kill(PID, SIGSTOP); // pause process
+                        p_executing->PID = PID;
                         p_executing->Start_time = getClk();
-                        p_executing->Remaining_time=p_executing->Runtime;
-                        //p_executing->Status=RUNNING;
+                        p_executing->Remaining_time = p_executing->Runtime;
+                        // p_executing->Status=RUNNING;
                         printf("Starting process with ID %d and PID %d\n", p_executing->ID, PID);
-                        printf("Remaining time of %d is %d\n",p_executing->ID,p_executing->Remaining_time);
+                        printf("Remaining time of %d is %d\n", p_executing->ID, p_executing->Remaining_time);
 
                         // Write to output file:
                         p_executing->Waiting_time = p_executing->Start_time - p_executing->Arrival;
@@ -380,12 +388,11 @@ int main(int argc, char *argv[])
                     // change process status
                     p_executing->Status = CONTINUE;
                     printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_executing->PID);
-                    printf("Remaining time of %d is %d\n",p_executing->ID,p_executing->Remaining_time);
+                    printf("Remaining time of %d is %d\n", p_executing->ID, p_executing->Remaining_time);
 
                     // Write to output file
                     p_executing->Waiting_time += getClk() - p_executing->Stopped_time;
                     fprintf(fptr, "At time  %d  process %d resumed arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
-
                 }
 
                 /* Two possibilities:
@@ -396,8 +403,8 @@ int main(int argc, char *argv[])
                 // 1.
                 if (p_executing->Remaining_time > quantum)
                 {
-                    kill(p_executing->PID, SIGCONT); //continue the process
-                    
+                    kill(p_executing->PID, SIGCONT); // continue the process
+
                     sleep(quantum);
 
                     // decrease remaining time by one qnatum period
@@ -405,7 +412,7 @@ int main(int argc, char *argv[])
 
                     // stop the process
                     printf("Stopping process with ID %d and PID %d...\n", p_executing->ID, p_executing->PID);
-                    printf("Remaining time of %d is %d\n",p_executing->ID,p_executing->Remaining_time);
+                    printf("Remaining time of %d is %d\n", p_executing->ID, p_executing->Remaining_time);
                     kill(p_executing->PID, SIGSTOP);
                     printf("Process with ID %d and PID %d has stopped\n", p_executing->ID, p_executing->PID);
 
@@ -440,14 +447,14 @@ int main(int argc, char *argv[])
                         p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
 
                         // write to file
-                        fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time,p_executing->TA,p_executing->WTA);
+                        fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time, p_executing->TA, p_executing->WTA);
                         printf("Finished process with ID %d at time %d \n", p_executing->ID, p_executing->Finish_time);
                         finishedProcesses++;
 
-                        Node *dummy=p_executing;
-                        dummy->next=NULL;
+                        Node *dummy = p_executing;
+                        dummy->next = NULL;
                         enQueueRR(finishedQueue, dummy);
-                        p_executing=NULL;
+                        p_executing = NULL;
                         printf("Current finished queue : ");
                         printqueue(finishedQueue);
                         printf("\n");
@@ -458,12 +465,12 @@ int main(int argc, char *argv[])
                 else if (p_executing->Remaining_time <= quantum && p_executing->Runtime != 0)
                 {
 
-                    kill(p_executing->PID, SIGCONT); //continue the process
+                    kill(p_executing->PID, SIGCONT); // continue the process
 
                     // Sleep for the remaining time
                     sleep(p_executing->Remaining_time);
 
-                    //kill(p_executing->PID, SIGSTOP);                     
+                    // kill(p_executing->PID, SIGSTOP);
 
                     // Update remaining time
                     p_executing->Remaining_time = 0;
@@ -479,15 +486,15 @@ int main(int argc, char *argv[])
                     p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
 
                     // write to file
-                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time,p_executing->TA,p_executing->WTA);
+                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time, p_executing->TA, p_executing->WTA);
 
                     printf("Finished process with ID %d at time %d \n", p_executing->ID, p_executing->Finish_time);
                     finishedProcesses++;
 
-                    Node *dummy=p_executing;
-                    dummy->next=NULL;
+                    Node *dummy = p_executing;
+                    dummy->next = NULL;
                     enQueueRR(finishedQueue, dummy);
-                    p_executing=NULL;
+                    p_executing = NULL;
                     printf("Current finished queue : ");
                     printqueue(finishedQueue);
                     printf("\n");
@@ -497,10 +504,10 @@ int main(int argc, char *argv[])
         break;
 
     case 4: // Multiple level Feedback Loop
-        //int quantum1 = 2;
-        //int quantum2 = 3;
-        //int quantum3 = 4;
-        // While there are still processes in the ready queues or there are still processes to be recieved
+        // int quantum1 = 2;
+        // int quantum2 = 3;
+        // int quantum3 = 4;
+        //  While there are still processes in the ready queues or there are still processes to be recieved
         while (!isEmpty(readyQueue1_MLFQ) || !isEmpty(readyQueue2_MLFQ) || !isEmpty(readyQueue3_MLFQ) || (received_number < processes_number))
         {
             // We will break out of the below loop when we do not receive any message and our readyQueues are not empty
@@ -584,7 +591,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-       break; 
+        break;
     }
     destroyClk(false);
     // return 0;
