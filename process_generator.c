@@ -187,36 +187,31 @@ int main(int argc, char *argv[])
             msg.message_data[2] = process_data[current_id][2]; // running time
             msg.message_data[3] = process_data[current_id][3]; // priority
             send_data = msgsnd(msgq_id, &msg, sizeof(msg.message_data), !IPC_NOWAIT);
-
-           
         }
     }
 
     // 7. Clear clock resources
+
     int status;
     int test = waitpid(scheduler_id, &status, 0);
     printf("exit status %d\n", WEXITSTATUS(status));
     if (WIFEXITED(status))
     {
-        printf("exited normally %d\n", WIFEXITED(status));
-
         int msgq_del;
         msgq_del = msgctl(msgq_id, IPC_RMID, 0);
         destroyClk(true);
         exit(0);
     }
-    printf("BYPASSED\n");
 }
 
 void clearResources(int signum)
 {
     int msgq_del;
-    printf("Caught Signal SIGNIT, Clearing All resources\n");
+    printf("Caught Signal SIGINT, Clearing All resources\n");
     msgq_del = msgctl(msgq_id, IPC_RMID, 0);
     destroyClk(true);
     exit(0);
 }
-
 
 int SIGTSTPP_handler(int signum)
 {

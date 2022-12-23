@@ -28,7 +28,7 @@ typedef struct Node
     int Stopped_time;   // Time at which process stopped executing
     int Remaining_time; // Remaining time for a process
     int TA;             // Turnaround time
-    int WTA;            // Weighted turnaround time
+    float WTA;          // Weighted turnaround time
 
 } Node;
 
@@ -36,9 +36,9 @@ typedef struct Node
 
 typedef struct Queue
 {
-    struct Node * Last;
+    struct Node *Last;
     struct Node *Head;
-    
+
 } Queue;
 
 // Create new Node
@@ -61,10 +61,8 @@ Queue *createQueue()
     return q;
 }
 
-
 void enQueueRR(Queue *q, Node *newNode)
 {
-
 
     // Node *tmp = newNode;
     // if (q->Head == NULL)
@@ -72,19 +70,17 @@ void enQueueRR(Queue *q, Node *newNode)
     //         q->Head = tmp;
     //         return;
     //     }
-        
-    
 
     // Node * trav = q->Head;
 
     // while (trav->next)
     //     trav = trav->next;
-    
+
     // trav->next = tmp;
     // return;
-    
+
     // Create a new node
-    Node *tmp = newNode;
+    struct Node *tmp = newNode;
 
     // If queue is empty, then new node is front and rear both
     if (q->Head == NULL)
@@ -94,13 +90,12 @@ void enQueueRR(Queue *q, Node *newNode)
         return;
     }
 
-    q->Last->next = tmp;
-    q->Last = tmp; 
-    return;
+    struct Node *Trav = q->Head;
+    while (Trav->next)
+        Trav = Trav->next;
 
-    
-    
-    
+    tmp->next = Trav->next;
+    Trav->next = tmp;
 }
 
 void enQueueHPF(Queue *q, Node *newNode)
@@ -193,51 +188,6 @@ void enQueueSJF(Queue *q, Node *newNode)
     }
 }
 
-
-void enQueueMLFQ(Queue *q1,Queue *q2,Queue *q3,Node *newNode)
-{
-    // Create a new node
-    struct Node *tmp = newNode;
-
-    if (tmp->Priority <= 3) // priority between [0,3]
-    {
-        // If queue is empty, then new node is front and rear both
-        if (q1->Head == NULL)
-        {
-            q1->Head = tmp;
-            return;
-        }
-    }
-    else if (tmp->Priority <= 7) // priority between [4,7]
-    {
-        // If queue is empty, then new node is front and rear both
-        if (q2->Head == NULL)
-        {
-            q2->Head = tmp;
-            return;
-        }
-        // else insert at rear
-        struct Node *Trav = q2->Head;
-        while (Trav->next)
-            Trav = Trav->next;
-        Trav->next = tmp;
-    }
-    else // priority between [8,10]
-    {
-        // If queue is empty, then new node is front
-        if (q3->Head == NULL)
-        {
-            q3->Head = tmp;
-            return;
-        }
-        // else insert at rear
-        struct Node *Trav = q3->Head;
-        while (Trav->next)
-            Trav = Trav->next;
-        Trav->next = tmp;
-    }
-}
-
 void printqueue(Queue *q)
 {
     struct Node *Trav = q->Head;
@@ -252,7 +202,7 @@ bool isEmpty(Queue *q)
 {
     if (q->Head)
         return false;
-    
+
     return true;
 }
 
