@@ -185,6 +185,8 @@ int main(int argc, char *argv[])
                     printf("Process with ID %d has just arrived at time %d\n", msg.message_data[0], getClk());
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
                     Node_to_insert->Remaining_time = Node_to_insert->Runtime;
+                    Node_to_insert->Waiting_time = 0;
+                    Node_to_insert->Stopped_time = getClk();
                     enQueueHPF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
                     res = true;
@@ -205,11 +207,6 @@ int main(int argc, char *argv[])
                 if (!first_time)
                 {
                     kill(p_executing->PID, SIGTSTP); // pause process
-                    // if (p_executing->ID != peek_queue(readyQueue)->ID)
-                    // {
-                    //     p_executing = peek_queue(readyQueue);
-                    //     p_executing->Remaining_time -= 1;
-                    // }
                 }
                 else
                 {
@@ -253,7 +250,13 @@ int main(int argc, char *argv[])
                         indexPID++;
                         p_executing->Start_time = getClk();
                         p_executing->PID = PID;
+                        printf("stopped time: %d\n", p_executing->Stopped_time);
+                        p_executing->Waiting_time += getClk() - p_executing->Stopped_time;
                         // change status to stopped and make process wait for execution
+                        fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
+                                p_executing->ID, p_executing->Arrival,
+                                p_executing->Runtime, p_executing->Remaining_time,
+                                p_executing->Waiting_time);
                         p_executing->Status = STOPPED;
                         kill(p_executing->PID, SIGTSTP); // pause process
                     }
@@ -265,6 +268,7 @@ int main(int argc, char *argv[])
                     int status;
 
                     kill(p_executing->PID, SIGCONT); // run process
+                    p_executing->Status = FINISHED;
                     int run_time = getClk();
                     // while (run_time + 1 > getClk())
                     // {
@@ -276,6 +280,10 @@ int main(int argc, char *argv[])
                     printf("finished process %d at time %d\n ", p_executing->ID, getClk());
                     // setting the finish time of the process
                     p_executing->Finish_time = getClk();
+                    fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
+                            p_executing->ID, p_executing->Arrival,
+                            p_executing->Runtime, p_executing->Remaining_time,
+                            p_executing->Waiting_time);
                     // make a dummy node to hold the value
                     Node *dummy = p_executing;
                     // dequeue current process
@@ -295,6 +303,8 @@ int main(int argc, char *argv[])
                 {
 
                     kill(p_executing->PID, SIGCONT); // run process
+                    p_executing->Status = RUNNING;
+
                     // printf("clock before pause: %d \n", getClk());
                     int run_time = getClk();
                     printf("clock before pause: %d \n", getClk());
