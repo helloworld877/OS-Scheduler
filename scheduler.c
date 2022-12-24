@@ -207,6 +207,39 @@ int main(int argc, char *argv[])
                 if (!first_time)
                 {
                     kill(p_executing->PID, SIGTSTP); // pause process
+
+                    // process had changed
+                    if (p_executing->ID != peek_queue(readyQueue)->ID)
+                    {
+                        printf("//////////////////\n");
+                        if (p_executing->Remaining_time != 0)
+                        {
+
+                            printf("stopped process: %d\n", p_executing->ID);
+                            fprintf(fptr, "At time  %d  process %d paused arr %d total %d remain %d wait %d \n", getClk(),
+                                    p_executing->ID, p_executing->Arrival,
+                                    p_executing->Runtime, p_executing->Remaining_time,
+                                    p_executing->Waiting_time);
+                            p_executing->Status = STOPPED;
+                            p_executing->Stopped_time = getClk();
+                            // printf("stopped time: %d\n", p_executing->Stopped_time);
+                        }
+
+                        if (peek_queue(readyQueue)->Status != WAITING)
+                        {
+
+                            printf("resumed process: %d\n", peek_queue(readyQueue)->ID);
+                            // printf("stopped time: %d\n", peek_queue(readyQueue)->Stopped_time);
+
+                            peek_queue(readyQueue)->Waiting_time += getClk() - peek_queue(readyQueue)->Stopped_time;
+                            // change status to stopped and make process wait for execution
+                            fprintf(fptr, "At time  %d  process %d resumed arr %d total %d remain %d wait %d \n", getClk(),
+                                    peek_queue(readyQueue)->ID, peek_queue(readyQueue)->Arrival,
+                                    peek_queue(readyQueue)->Runtime, peek_queue(readyQueue)->Remaining_time,
+                                    peek_queue(readyQueue)->Waiting_time);
+                        }
+                        printf("//////////////////\n");
+                    }
                 }
                 else
                 {
@@ -293,7 +326,7 @@ int main(int argc, char *argv[])
                     dummy->next = NULL;
                     enQueueRR(finishedQueue, dummy);
                     // p_executing = peek_queue(readyQueue);
-                    // p_executing->Remaining_time -= 1;
+                    p_executing->Remaining_time -= 1;
 
                     // set current executing process to null
                     // printqueue(finishedQueue);
