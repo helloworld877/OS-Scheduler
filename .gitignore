@@ -6,10 +6,8 @@ process.out
 clk.out
 processes.txt
 a.out
-
 Makefile
 schedular.log
 Makefile
-schedular.log
 scheduler.perf
-schedular.log
+
