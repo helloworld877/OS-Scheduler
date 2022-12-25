@@ -51,6 +51,10 @@ int main(int argc, char *argv[])
     int indexPID = 0;
     int finishedProcesses = 0;
 
+    //PHPF vars
+    bool first_time = true;
+    bool res = false;
+
     // MLFQ vars
     int current_level;
     int stat_loc;
@@ -159,8 +163,7 @@ int main(int argc, char *argv[])
 
         // printf("HPF inside scheduler\n");
         // While there are still processes in the ready queue or there are still processes to be recieved
-        bool first_time = true;
-        bool res = false;
+
         while (!isEmpty(readyQueue) || (received_number < processes_number))
         {
             // We will break out of the below loop when we do not receive any message and our readyQueue is not empty
@@ -476,6 +479,12 @@ int main(int argc, char *argv[])
                         printf("Finished process with ID %d at time %d \n", p_executing->ID, p_executing->Finish_time);
                         finishedProcesses++;
 
+                        useful_time = p_executing->Runtime + useful_time;
+                        // calculating summation of avg waiting time
+                        avgwait = (avgwait + (p_executing->Waiting_time));
+                        // calculating summation of avg  weighted turn around time
+                        avgwta = (avgwta + (p_executing->WTA));
+
                         Node *dummy = p_executing;
                         dummy->next = NULL;
                         enQueueRR(finishedQueue, dummy);
@@ -483,6 +492,7 @@ int main(int argc, char *argv[])
                         printf("Current finished queue : ");
                         printqueue(finishedQueue);
                         printf("\n");
+                        total_time = getClk();
                     }
                 }
 
@@ -516,6 +526,13 @@ int main(int argc, char *argv[])
                     printf("Finished process with ID %d at time %d \n", p_executing->ID, p_executing->Finish_time);
                     finishedProcesses++;
 
+
+                    useful_time = p_executing->Runtime + useful_time;
+                    // calculating summation of avg waiting time
+                    avgwait = (avgwait + (p_executing->Waiting_time));
+                    // calculating summation of avg  weighted turn around time
+                    avgwta = (avgwta + (p_executing->WTA));
+
                     Node *dummy = p_executing;
                     dummy->next = NULL;
                     enQueueRR(finishedQueue, dummy);
@@ -523,6 +540,7 @@ int main(int argc, char *argv[])
                     printf("Current finished queue : ");
                     printqueue(finishedQueue);
                     printf("\n");
+                    total_time = getClk();
                 }
             }
         }
