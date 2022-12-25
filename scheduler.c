@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
                     // {
                     //     // wait one clock cycle
                     // }
-                    sleep(1);
+                    // sleep(1);
                     printf("clock after pause: %d \n", getClk());
 
                     // sleep(1);
