@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     int indexPID = 0;
     int finishedProcesses = 0;
 
-    //PHPF vars
+    // PHPF vars
     bool first_time = true;
     bool res = false;
 
@@ -316,6 +316,18 @@ int main(int argc, char *argv[])
                     printf("finished process %d at time %d\n ", p_executing->ID, getClk());
                     // setting the finish time of the process
                     p_executing->Finish_time = getClk();
+                    // Calculate TA and WTA
+                    p_executing->TA = getClk() - p_executing->Arrival;
+                    p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
+
+                    // useful_time += 1;
+                    // calculating summation of avg waiting time
+                    avgwait = (avgwait + (p_executing->Waiting_time));
+                    // calculating summation of avg  weighted turn around time
+                    avgwta = (avgwta + (p_executing->WTA));
+                    // updating total time
+                    total_time = getClk();
+                    useful_time += 1;
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
@@ -343,14 +355,16 @@ int main(int argc, char *argv[])
 
                     // printf("clock before pause: %d \n", getClk());
                     int run_time = getClk();
-                    printf("clock before pause: %d \n", getClk());
+                    // printf("clock before pause: %d \n", getClk());
 
                     // while (run_time + 1 > getClk())
                     // {
                     //     // wait one clock cycle
                     // }
-                    // sleep(1);
-                    printf("clock after pause: %d \n", getClk());
+                    sleep(1);
+                    useful_time += 1;
+                    // useful_time += 1;
+                    // printf("clock after pause: %d \n", getClk());
 
                     // sleep(1);
                     // kill(p_executing->PID, SIGTSTP); // pause process
@@ -568,7 +582,6 @@ int main(int argc, char *argv[])
 
                     printf("Finished process with ID %d at time %d \n", p_executing->ID, p_executing->Finish_time);
                     finishedProcesses++;
-
 
                     useful_time = p_executing->Runtime + useful_time;
                     // calculating summation of avg waiting time
