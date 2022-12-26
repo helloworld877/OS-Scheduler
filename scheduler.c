@@ -89,12 +89,6 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
-                    // printf("Ready queue is empty. Waiting to receive a new process...\n");
-                    // printf("Current time : %d \n", getClk());
-                    // printf("Total processes received till now : %d\n", received_number);
-                    // printf("Remaining processes that have still not arrived: %d", processes_number - received_number);
-                    // printf("\n");
-                    // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
 
@@ -131,29 +125,30 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
+                    p_executing->Waiting_time = getClk() - p_executing->Arrival; 
                     int status;
-                    // kill(current_child_pid, SIGSTOP);
-                    // kill(current_child_pid, SIGCONT);
-                    // printf("Process with ID = %d has started at time %d ", p_executing->ID, getClk());
-                    // printf("\n");
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
                             p_executing->Waiting_time);
                     p_executing->Finish_time = getClk();
-
-                    p_executing->Remaining_time = 0;
                     wait(status);
-                    // printf("Process with ID = %d has finished at time %d ", p_executing->ID, getClk());
+                   
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
                             p_executing->Waiting_time);
                     p_executing->next = NULL;
+                    p_executing->TA = getClk() - p_executing->Arrival;
+                    p_executing->WTA = (p_executing->TA) / (p_executing->Runtime); 
+                    useful_time+=p_executing->Runtime;
+                    avgwait = p_executing->Waiting_time;
+                    avgwta+=p_executing->WTA;
                     enQueueRR(finishedQueue, p_executing);
                 }
             }
         }
+        total_time = getClk();
         break;
 
         // MARK
