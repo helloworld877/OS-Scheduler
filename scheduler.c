@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
                     avgwta = (avgwta + (p_executing->WTA));
                     // updating total time
                     total_time = getClk();
-                    useful_time += 1;
+                    useful_time = p_executing->Runtime + useful_time;
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
@@ -362,8 +362,7 @@ int main(int argc, char *argv[])
                     //     // wait one clock cycle
                     // }
                     sleep(1);
-                    useful_time += 1;
-                    // useful_time += 1;
+
                     // printf("clock after pause: %d \n", getClk());
 
                     // sleep(1);
