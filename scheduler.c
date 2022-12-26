@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    p_executing->Waiting_time = getClk() - p_executing->Arrival; 
+                    p_executing->Waiting_time = getClk() - p_executing->Arrival;
                     int status;
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
@@ -140,24 +140,19 @@ int main(int argc, char *argv[])
                             p_executing->Waiting_time);
                     p_executing->next = NULL;
                     p_executing->TA = getClk() - p_executing->Arrival;
-                    p_executing->WTA = (p_executing->TA) / (p_executing->Runtime); 
-                    useful_time+=p_executing->Runtime;
+                    p_executing->WTA = (p_executing->TA) / (p_executing->Runtime);
+                    useful_time += p_executing->Runtime;
                     avgwait = p_executing->Waiting_time;
-                    avgwta+=p_executing->WTA;
+                    avgwta += p_executing->WTA;
                     enQueueRR(finishedQueue, p_executing);
                 }
             }
         }
-        
+
         break;
 
         // MARK
     case 2: // Preemptive Highest Priority First
-
-        // printf("\n\n\n\n\n\n\n\n");
-
-        // printf("HPF inside scheduler\n");
-        // While there are still processes in the ready queue or there are still processes to be recieved
 
         while (!isEmpty(readyQueue) || (received_number < processes_number))
         {
@@ -170,11 +165,6 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
-                    // printf("Ready queue is empty. Waiting to receive a new process...\n");
-                    // printf("Current time : %d \n", getClk());
-                    // printf("Total processes received till now : %d\n", received_number);
-                    // printf("Remaining processes that have still not arrived : %d\n", processes_number - received_number);
-                    // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
 
@@ -301,11 +291,7 @@ int main(int argc, char *argv[])
                     kill(p_executing->PID, SIGCONT); // run process
                     p_executing->Status = FINISHED;
                     int run_time = getClk();
-                    // while (run_time + 1 > getClk())
-                    // {
-                    //     // wait one clock cycle
-                    // }
-                    // printf("clock after pause: %d \n", getClk());
+
                     sleep(1);
                     // waitpid(p_executing->PID, &status, 0);
                     printf("finished process %d at time %d\n ", p_executing->ID, getClk());
@@ -315,8 +301,6 @@ int main(int argc, char *argv[])
                     p_executing->TA = getClk() - p_executing->Arrival;
                     p_executing->WTA = (float)p_executing->TA / p_executing->Runtime;
 
-                    // useful_time += 1;
-                    // calculating summation of avg waiting time
                     avgwait = (avgwait + (p_executing->Waiting_time));
                     // calculating summation of avg  weighted turn around time
                     avgwta = (avgwta + (p_executing->WTA));
@@ -334,10 +318,6 @@ int main(int argc, char *argv[])
                     enQueueRR(finishedQueue, dummy);
                     // p_executing = peek_queue(readyQueue);
                     p_executing->Remaining_time -= 1;
-
-                    // set current executing process to null
-                    // printqueue(finishedQueue);
-                    // printf("\n");
                 }
                 else
                 {
@@ -345,22 +325,10 @@ int main(int argc, char *argv[])
                     kill(p_executing->PID, SIGCONT); // run process
                     p_executing->Status = RUNNING;
 
-                    // printf("clock before pause: %d \n", getClk());
                     int run_time = getClk();
-                    // printf("clock before pause: %d \n", getClk());
 
-                    // while (run_time + 1 > getClk())
-                    // {
-                    //     // wait one clock cycle
-                    // }
                     sleep(1);
 
-                    // printf("clock after pause: %d \n", getClk());
-
-                    // sleep(1);
-                    // kill(p_executing->PID, SIGTSTP); // pause process
-                    // nexttime = getClk();
-                    // time = nexttime;
                     p_executing->Remaining_time -= 1; // decrement waiting time
                 }
                 printf("Process in execution is with ID %d \n", p_executing->ID);
