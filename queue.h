@@ -20,6 +20,7 @@ typedef struct Node
     int PID;
     enum STATUS Status;
     struct Node *next;
+    int size;
 
     // For output file
     int Finish_time;    // Time at which process finished
@@ -32,6 +33,19 @@ typedef struct Node
 
 } Node;
 
+// Tree node for buddy system
+typedef struct TreeNode
+{
+    struct TreeNode *parent; // parent node
+    struct TreeNode *right;  // right child node
+    struct TreeNode *left;   // left child node
+
+    // properties
+    int size;
+    int actual_size;
+    int start_byte;
+    int end_byte;
+} TreeNode;
 // Note: used typedef so no need to write type "struct Node n1" with every Node declaration, instead just write "Node n1"
 
 typedef struct Queue

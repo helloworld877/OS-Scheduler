@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
     processes_num -= 1;
     // Make 2D array to hold process data
-    int process_data[processes_num][4];
+    int process_data[processes_num][5];
 
     // reset the file ptr to the beginning of the file
     rewind(fp);
@@ -76,8 +76,15 @@ int main(int argc, char *argv[])
     // initialize 2D array with processes' data
     for (int i = 0; i < processes_num; i++) // each row
     {
-        for (int j = 0; j < 4; j++) // each coloumn
+        for (int j = 0; j < 5; j++) // each coloumn
             fscanf(fp, "%d", &process_data[i][j]);
+    }
+
+    for (int i = 0; i < processes_num; i++) // each row
+    {
+        for (int j = 0; j < 5; j++) // each coloumn
+            printf("%d ", process_data[i][j]);
+        printf("\n");
     }
 
     // done with reading file, close it
@@ -186,6 +193,7 @@ int main(int argc, char *argv[])
             msg.message_data[1] = process_data[current_id][1]; // arrival time
             msg.message_data[2] = process_data[current_id][2]; // running time
             msg.message_data[3] = process_data[current_id][3]; // priority
+            msg.message_data[4] = process_data[current_id][4];
             send_data = msgsnd(msgq_id, &msg, sizeof(msg.message_data), !IPC_NOWAIT);
         }
     }
