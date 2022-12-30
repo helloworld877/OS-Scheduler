@@ -257,6 +257,7 @@ void inOrder(TreeNode *root, Node *p)
             root->full = 1;
             root->ID = p->ID;
             result = 1;
+            p->tree_position = root;
             return;
         }
 
@@ -281,6 +282,8 @@ void inOrder(TreeNode *root, Node *p)
         {
             l->full = 1;
             l->ID = p->ID;
+            p->tree_position = l;
+
             result = 1;
         }
         return;
