@@ -236,21 +236,21 @@ Node *peek_queue(Queue *q) // return ptr on head
 }
 
 int result = -1;
-int div = 0;
+int split = 0;
 void inOrder(TreeNode *root, Node *p)
 {
     if (!root)
         return;
 
     inOrder(root->left, p);
-    if (result == 1 || div == 1)
+    if (result == 1 || split == 1)
         return;
     inOrder(root->right, p);
-    if (result == 1 || div == 1)
+    if (result == 1 || split == 1)
         return;
     if (!root->left && !root->right && root->full != 1)
     {
-        div = 1;
+        split = 1;
 
         if ((root->size) / 2 < p->size)
         {
@@ -296,7 +296,7 @@ int Tree_Insert(TreeNode *root, Node *p)
     while (result == -1)
     {
         inOrder(root, p);
-        div = 0;
+        split = 0;
     }
     result = -1;
 }
