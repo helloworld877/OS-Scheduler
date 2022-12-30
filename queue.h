@@ -21,6 +21,7 @@ typedef struct Node
     enum STATUS Status;
     struct Node *next;
     int size;
+    struct TreeNode *tree_position;
 
     // For output file
     int Finish_time;    // Time at which process finished
@@ -41,7 +42,9 @@ typedef struct TreeNode
     struct TreeNode *left;   // left child node
 
     // properties
+    int ID;
     int size;
+    int full;
     int actual_size;
     int start_byte;
     int end_byte;
@@ -231,3 +234,99 @@ Node *peek_queue(Queue *q) // return ptr on head
 {
     return q->Head;
 }
+
+int result = -1;
+int div = 0;
+void inOrder(TreeNode *root, Node *p)
+{
+    if (!root)
+        return;
+
+    inOrder(root->left, p);
+    if (result == 1 || div == 1)
+        return;
+    inOrder(root->right, p);
+    if (result == 1 || div == 1)
+        return;
+    if (!root->left && !root->right && root->full != 1)
+    {
+        div = 1;
+
+        if ((root->size) / 2 < p->size)
+        {
+            root->full = 1;
+            root->ID = p->ID;
+            result = 1;
+            return;
+        }
+
+        struct TreeNode *l = (TreeNode *)malloc(sizeof(TreeNode));
+        struct TreeNode *r = (TreeNode *)malloc(sizeof(TreeNode));
+        l->parent = root;
+        r->parent = root;
+        root->left = l;
+        root->right = r;
+        l->size = (root->size) / 2;
+        r->size = (root->size) / 2;
+        r->full = 0;
+        l->full = 0;
+
+        l->start_byte = root->start_byte;
+        l->end_byte = (root->end_byte / 2);
+
+        r->start_byte = (root->end_byte + 1) / 2;
+        r->end_byte = (root->end_byte);
+
+        if ((l->size) / 2 < p->size)
+        {
+            l->full = 1;
+            l->ID = p->ID;
+            result = 1;
+        }
+        return;
+    }
+}
+
+int Tree_Insert(TreeNode *root, Node *p)
+{
+
+    while (result == -1)
+    {
+        inOrder(root, p);
+        div = 0;
+    }
+    result = -1;
+}
+
+// int Tree_Insert(TreeNode *root, Node *p)
+// {
+//     // root is the root of the tree
+//     // p is the process we need to insert
+
+//     // terminating condition
+
+//     if (root->full && root->full == 1)
+//     {
+//         return -1;
+//     }
+
+//     if (root->size / 2 < p->size)
+//     {
+//         root->process_ID = p->ID;
+//         root->full = 1;
+//         return 1;
+//     }
+
+//     // recursive call
+
+//     // node has no children
+//     if (!(root->left && root->right))
+//     {
+//         root->left = new struct TreeNode;
+//         root->left->full = 0;
+//         root->left->parent = root;
+//         root->left->size = root->size / 2;
+//         root->left->start_byte = root->start_byte;
+//         root->left->end_byte = floor(root->end_byte / 2);
+//     }
+// }
