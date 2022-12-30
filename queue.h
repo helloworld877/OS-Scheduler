@@ -273,9 +273,9 @@ void inOrder(TreeNode *root, Node *p)
         l->full = 0;
 
         l->start_byte = root->start_byte;
-        l->end_byte = (root->end_byte / 2);
+        l->end_byte = root->start_byte + l->size - 1;
 
-        r->start_byte = (root->end_byte + 1) / 2;
+        r->start_byte = root->start_byte + r->size;
         r->end_byte = (root->end_byte);
 
         if ((l->size) / 2 < p->size)
