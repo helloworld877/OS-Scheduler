@@ -5,7 +5,7 @@
 struct message
 {
     long m_type;
-    int message_data[4];
+    int message_data[5];
 };
 
 int main(int argc, char *argv[])
@@ -36,6 +36,15 @@ int main(int argc, char *argv[])
     FILE *fptr;
     fptr = fopen("schedular.log", "w");
     fprintf(fptr, "#At time x process y state arr w total z remain y wait k \n");
+    TreeNode * Root = (TreeNode *)malloc(sizeof(TreeNode));
+    Root->left = NULL;
+    Root->right = NULL;
+    Root->actual_size = 1024;
+    Root->start_byte = 0;
+    Root->end_byte = 0;
+    Root->full = 0;
+    Root->parent = NULL;
+    Root->ID = 0;
 
     FILE *fptr2;
     fptr2 = fopen("scheduler.perf", "w");
@@ -84,7 +93,11 @@ int main(int argc, char *argv[])
             do
             {
                 // Do not wait for a message
-                received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
+                //  printf("Ready queue is empty. Waiting to receive a new process...\n");
+                //     printf("Current time : %d \n", getClk());
+                //     printf("Total processes received till now : %d\n", received_number);
+                //     printf("Remaining processes that have still not arrived : %d \n", processes_number - received_number);
+                 received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
 
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
@@ -96,7 +109,7 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
 
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     enQueueSJF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
                 }
@@ -125,6 +138,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
+                    Tree_Insert(Root, p_executing);
                     p_executing->Waiting_time = getClk() - p_executing->Arrival;
                     int status;
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
@@ -171,7 +185,7 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
                     printf("Process with ID %d has just arrived at time %d\n", msg.message_data[0], getClk());
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     Node_to_insert->Remaining_time = Node_to_insert->Runtime;
                     Node_to_insert->Waiting_time = 0;
                     Node_to_insert->Stopped_time = getClk();
@@ -364,7 +378,7 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
                     printf("message successful at time %d \n", getClk());
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     enQueueRR(readyQueue, Node_to_insert);
                     received_number++;
                     printf("Current ready queue : ");
@@ -584,7 +598,7 @@ int main(int argc, char *argv[])
                 // if a message has been received
                 if (received != -1)
                 {
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     enQueueHPF(readyQueue, Node_to_insert);
                     received_number++;
                 }
