@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+ // Output files:
+    
+
 enum STATUS
 {
     RUNNING,
@@ -53,6 +56,7 @@ typedef struct TreeNode
 
 typedef struct Queue
 {
+    
     struct Node *Last;
     struct Node *Head;
 
@@ -70,13 +74,18 @@ Node *newNode(int id, int arrival, int run, int p, int mem_size, enum STATUS sta
     tmp->next = NULL;
     tmp->size = mem_size;
     return tmp;
+    
 }
 
 Queue *createQueue()
 {
     struct Queue *q = (Queue *)malloc(sizeof(Queue));
     q->Head = NULL;
+    FILE *fptr3;
+    fptr3 = fopen("ttttttttttttta.log", "w");
+    fprintf(fptr3, "#At time x process y state arr w total z remain y wait k \n");
     return q;
+    
 }
 
 void enQueueRR(Queue *q, Node *newNode)
@@ -240,6 +249,8 @@ int result = -1;
 int split = 0;
 void inOrder(TreeNode *root, Node *p)
 {
+
+   
     if (!root)
         return;
 
@@ -252,7 +263,7 @@ void inOrder(TreeNode *root, Node *p)
     if (!root->left && !root->right && root->full != 1)
     {
         split = 1;
-
+       
         if ((root->size) / 2 < p->size)
         {
             root->full = 1;
@@ -261,7 +272,7 @@ void inOrder(TreeNode *root, Node *p)
             p->tree_position = root;
             return;
         }
-
+       
         struct TreeNode *l = (TreeNode *)malloc(sizeof(TreeNode));
         struct TreeNode *r = (TreeNode *)malloc(sizeof(TreeNode));
         l->parent = root;
@@ -278,14 +289,15 @@ void inOrder(TreeNode *root, Node *p)
 
         r->start_byte = root->start_byte + r->size;
         r->end_byte = (root->end_byte);
+        
 
         if ((l->size) / 2 < p->size)
         {
             l->full = 1;
             l->ID = p->ID;
             p->tree_position = l;
-
             result = 1;
+            
         }
         return;
     }
@@ -322,6 +334,12 @@ int Tree_Insert(TreeNode *root, Node *p)
         split = 0;
     }
     result = -1;
+    printf("\n");
+    printf("start %d  ", p->tree_position->start_byte);
+    printf("\n");
+    printf("end %d",  p->tree_position->end_byte);
+   
+    return 0;
 }
 
 // int Tree_Insert(TreeNode *root, Node *p)

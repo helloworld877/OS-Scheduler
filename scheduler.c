@@ -20,9 +20,13 @@ int main(int argc, char *argv[])
     int quantum = atoi(argv[3]);
 
     //TreeNode *Root = (TreeNode *)malloc(sizeof(TreeNode));
-    TreeNode *Root;
+    TreeNode *Root = (TreeNode *)malloc(sizeof(TreeNode));
     Root->left = NULL;
     Root->right = NULL;
+    Root->full = 0;
+    Root->size = 1024;
+    Root->start_byte = 0;
+    Root->end_byte = 1023;
     
 
     // Message variables:
@@ -42,6 +46,8 @@ int main(int argc, char *argv[])
     FILE *fptr;
     fptr = fopen("schedular.log", "w");
     fprintf(fptr, "#At time x process y state arr w total z remain y wait k \n");
+
+    
 
     FILE *fptr2;
     fptr2 = fopen("scheduler.perf", "w");
@@ -91,11 +97,11 @@ int main(int argc, char *argv[])
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
-                    // printf("Ready queue is empty. Waiting to receive a new process...\n");
-                    // printf("Current time : %d \n", getClk());
-                    // printf("Total processes received till now : %d\n", received_number);
-                    // printf("Remaining processes that have still not arrived: %d", processes_number - received_number);
-                    // printf("\n");
+                    printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    printf("Current time : %d \n", getClk());
+                    printf("Total processes received till now : %d\n", received_number);
+                    printf("Remaining processes that have still not arrived: %d", processes_number - received_number);
+                    printf("\n");
                     // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
@@ -103,7 +109,7 @@ int main(int argc, char *argv[])
                 // if a message has been received
                 if (received != -1)
                 {
-
+                    
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     enQueueSJF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
@@ -139,14 +145,17 @@ int main(int argc, char *argv[])
                     // printf("Process with ID = %d has started at time %d ", p_executing->ID, getClk());
                     // printf("\n");
                     Tree_Insert(Root, p_executing);
+                    
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
                             p_executing->Waiting_time);
                     p_executing->Finish_time = getClk();
 
+
                     p_executing->Remaining_time = 0;
                     wait(status);
+                    
                     // printf("Process with ID = %d has finished at time %d ", p_executing->ID, getClk());
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
@@ -154,6 +163,10 @@ int main(int argc, char *argv[])
                             p_executing->Waiting_time);
                     p_executing->next = NULL;
                     enQueueRR(finishedQueue, p_executing);
+                    printf("\n");
+                    printf("returned hereeees");
+                    printf("\n");
+                    //Tree_Delete(Root, p_executing);
                 }
             }
         }
