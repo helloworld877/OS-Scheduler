@@ -266,7 +266,7 @@ void inOrder(TreeNode *root, Node *p)
     inOrder(root->right, p);
     if (result == 1 || split == 1)
         return;
-    if (!root->left && !root->right && root->full != 1)
+    if (!root->left && !root->right && root->full != 1 && root->size >= p->size )
     {
         split = 1;
        
