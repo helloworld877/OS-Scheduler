@@ -59,7 +59,7 @@ typedef struct Queue
 } Queue;
 
 // Create new Node
-Node *newNode(int id, int arrival, int run, int p, enum STATUS stat)
+Node *newNode(int id, int arrival, int run, int p, int mem_size, enum STATUS stat)
 {
     struct Node *tmp = (Node *)malloc(sizeof(Node));
     tmp->ID = id;
@@ -68,6 +68,7 @@ Node *newNode(int id, int arrival, int run, int p, enum STATUS stat)
     tmp->Priority = p;
     tmp->Status = stat;
     tmp->next = NULL;
+    tmp->size = mem_size;
     return tmp;
 }
 
@@ -290,6 +291,28 @@ void inOrder(TreeNode *root, Node *p)
     }
 }
 
+
+void Tree_Delete(TreeNode *root, Node*p )
+{
+    TreeNode * to_be_deleted = p->tree_position;
+    to_be_deleted->full = 0;
+    TreeNode * parent_ =  to_be_deleted->parent;
+    TreeNode * check;
+    if (parent_->right ==  to_be_deleted)
+        check = parent_->left;
+    if (parent_->left ==  to_be_deleted)
+        check = parent_->right;
+    
+    if (check->full == 0 && !check->left && !check->right)
+    {
+        root->left = NULL;
+        root->right = NULL;
+    }
+    
+    
+  
+    
+}
 int Tree_Insert(TreeNode *root, Node *p)
 {
 

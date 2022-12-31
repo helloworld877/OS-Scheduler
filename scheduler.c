@@ -18,6 +18,14 @@ int main(int argc, char *argv[])
     int processes_number = atoi(argv[1]);
     int algo_number = atoi(argv[2]);
     int quantum = atoi(argv[3]);
+    TreeNode * Root;
+    Root->left = NULL;
+    Root->right = NULL;
+    Root->size = 1024;
+    Root->full = 0;
+    Root->start_byte = 0;
+    Root->end_byte = 1023;
+    Root->ID = 0;
 
     // Message variables:
     key_t key_sch_pgen = 33; // key associated with the message queue
@@ -96,7 +104,7 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
 
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4],  WAITING);
                     enQueueSJF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
                 }
@@ -127,6 +135,7 @@ int main(int argc, char *argv[])
                 {
                     p_executing->Waiting_time = getClk() - p_executing->Arrival;
                     int status;
+                    //Tree_Insert(Root,p_executing);
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
@@ -171,7 +180,7 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
                     printf("Process with ID %d has just arrived at time %d\n", msg.message_data[0], getClk());
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     Node_to_insert->Remaining_time = Node_to_insert->Runtime;
                     Node_to_insert->Waiting_time = 0;
                     Node_to_insert->Stopped_time = getClk();
@@ -364,7 +373,7 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
                     printf("message successful at time %d \n", getClk());
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3],  msg.message_data[4], WAITING);
                     enQueueRR(readyQueue, Node_to_insert);
                     received_number++;
                     printf("Current ready queue : ");
@@ -584,7 +593,7 @@ int main(int argc, char *argv[])
                 // if a message has been received
                 if (received != -1)
                 {
-                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], WAITING);
+                    Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     enQueueHPF(readyQueue, Node_to_insert);
                     received_number++;
                 }
