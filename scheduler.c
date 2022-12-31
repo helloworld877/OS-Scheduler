@@ -19,6 +19,18 @@ int main(int argc, char *argv[])
     int algo_number = atoi(argv[2]);
     int quantum = atoi(argv[3]);
 
+    //TreeNode *Root = (TreeNode *)malloc(sizeof(TreeNode));
+    TreeNode *Root = (TreeNode *)malloc(sizeof(TreeNode));
+    Root->left = NULL;
+    Root->right = NULL;
+    Root->full = 0;
+    Root->size = 1024;
+    Root->start_byte = 0;
+    Root->end_byte = 1023;
+    bool res = false;
+    bool first_time = true;
+    
+
     // Message variables:
     key_t key_sch_pgen = 33; // key associated with the message queue
     // use IPC_CREAT to create the message queue if it does not exist
@@ -36,15 +48,11 @@ int main(int argc, char *argv[])
     FILE *fptr;
     fptr = fopen("schedular.log", "w");
     fprintf(fptr, "#At time x process y state arr w total z remain y wait k \n");
-    TreeNode * Root = (TreeNode *)malloc(sizeof(TreeNode));
-    Root->left = NULL;
-    Root->right = NULL;
-    Root->actual_size = 1024;
-    Root->start_byte = 0;
-    Root->end_byte = 0;
-    Root->full = 0;
-    Root->parent = NULL;
-    Root->ID = 0;
+    FILE *fptr3;
+    fptr3 = fopen("memory.log", "w");
+    fprintf(fptr3, "#At time x process y state arr w total z remain y wait k \n");
+
+    
 
     FILE *fptr2;
     fptr2 = fopen("scheduler.perf", "w");
@@ -59,10 +67,6 @@ int main(int argc, char *argv[])
     int *p_PIDS = (int *)malloc(processes_number * sizeof(int)); // For process PIDs
     int indexPID = 0;
     int finishedProcesses = 0;
-
-    // PHPF vars
-    bool first_time = true;
-    bool res = false;
 
     // MLFQ vars
     int current_level;
@@ -81,6 +85,7 @@ int main(int argc, char *argv[])
     int totalRuntime = 0;
 
     int index = 0;
+    create_file();
 
     // Algorithm execution
     switch (algo_number)
@@ -93,22 +98,24 @@ int main(int argc, char *argv[])
             do
             {
                 // Do not wait for a message
-                //  printf("Ready queue is empty. Waiting to receive a new process...\n");
-                //     printf("Current time : %d \n", getClk());
-                //     printf("Total processes received till now : %d\n", received_number);
-                //     printf("Remaining processes that have still not arrived : %d \n", processes_number - received_number);
-                 received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
+                received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, IPC_NOWAIT);
 
                 // msgrcv returns -1 if no message was received
                 if (isEmpty(readyQueue) && received == -1) // no processes present to perform
                 {
+                    printf("Ready queue is empty. Waiting to receive a new process...\n");
+                    printf("Current time : %d \n", getClk());
+                    printf("Total processes received till now : %d\n", received_number);
+                    printf("Remaining processes that have still not arrived: %d", processes_number - received_number);
+                    printf("\n");
+                    // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
                 }
 
                 // if a message has been received
                 if (received != -1)
                 {
-
+                    
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     enQueueSJF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
@@ -138,33 +145,42 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    Tree_Insert(Root, p_executing);
-                    p_executing->Waiting_time = getClk() - p_executing->Arrival;
                     int status;
+                    Tree_Insert(Root, p_executing);
+                    fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                            p_executing->size,
+                            p_executing->ID,
+                            p_executing->tree_position->start_byte,
+                            p_executing->tree_position->end_byte);
+                    
+                    
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
                             p_executing->Waiting_time);
                     p_executing->Finish_time = getClk();
+
+
+                    p_executing->Remaining_time = 0;
                     wait(status);
-                    total_time = getClk();
+                    
+                    // printf("Process with ID = %d has finished at time %d ", p_executing->ID, getClk());
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
                             p_executing->Waiting_time);
                     p_executing->next = NULL;
-                    p_executing->TA = getClk() - p_executing->Arrival;
-                    p_executing->WTA = (p_executing->TA) / (p_executing->Runtime);
-                    useful_time += p_executing->Runtime;
-                    avgwait = p_executing->Waiting_time;
-                    avgwta += p_executing->WTA;
                     enQueueRR(finishedQueue, p_executing);
+                    Tree_Delete(Root, p_executing);
+                    fprintf(fptr3, "At time  %d freed %d bytes from process %d from %d to %d\n", getClk(),
+                            p_executing->size,
+                            p_executing->ID,
+                            p_executing->tree_position->start_byte,
+                            p_executing->tree_position->end_byte);
                 }
             }
         }
-
         break;
-
         // MARK
     case 2: // Preemptive Highest Priority First
 

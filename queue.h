@@ -14,6 +14,15 @@ enum STATUS
     FINISHED
 };
 
+
+
+void create_file()
+{
+    // FILE *fptr;
+    // fptr = fopen("memory2.log", "w");
+    // fprintf(fptr, "At time x allocated y bytes for process z from i to j");
+    return;
+}
 typedef struct Node
 {
     int ID;
@@ -81,9 +90,6 @@ Queue *createQueue()
 {
     struct Queue *q = (Queue *)malloc(sizeof(Queue));
     q->Head = NULL;
-    FILE *fptr3;
-    fptr3 = fopen("ttttttttttttta.log", "w");
-    fprintf(fptr3, "#At time x process y state arr w total z remain y wait k \n");
     return q;
     
 }
@@ -319,11 +325,8 @@ void Tree_Delete(TreeNode *root, Node*p )
     {
         root->left = NULL;
         root->right = NULL;
-    }
-    
-    
+    }    
   
-    
 }
 int Tree_Insert(TreeNode *root, Node *p)
 {
@@ -334,10 +337,7 @@ int Tree_Insert(TreeNode *root, Node *p)
         split = 0;
     }
     result = -1;
-    printf("\n");
-    printf("end %d  ", p->tree_position->end_byte);
-    printf("\n");
-    printf("end %d",  p->tree_position->end_byte);
+
    
     return 0;
 }
