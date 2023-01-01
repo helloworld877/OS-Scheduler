@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
                     printf("\n");
                     // wait for a message
                     received = msgrcv(msgq_id, &msg, sizeof(msg.message_data), 0, !IPC_NOWAIT);
+                    printf("sent!");
                 }
 
                 // if a message has been received
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
                             p_executing->ID,
                             p_executing->tree_position->start_byte,
                             p_executing->tree_position->end_byte);
+                    
 
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
