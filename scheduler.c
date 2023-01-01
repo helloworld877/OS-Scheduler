@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     int algo_number = atoi(argv[2]);
     int quantum = atoi(argv[3]);
 
-    //TreeNode *Root = (TreeNode *)malloc(sizeof(TreeNode));
+    // TreeNode *Root = (TreeNode *)malloc(sizeof(TreeNode));
     TreeNode *Root = (TreeNode *)malloc(sizeof(TreeNode));
     Root->left = NULL;
     Root->right = NULL;
@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     Root->end_byte = 1023;
     bool res = false;
     bool first_time = true;
-    
 
     // Message variables:
     key_t key_sch_pgen = 33; // key associated with the message queue
@@ -51,8 +50,6 @@ int main(int argc, char *argv[])
     FILE *fptr3;
     fptr3 = fopen("memory.log", "w");
     fprintf(fptr3, "#At time x process y state arr w total z remain y wait k \n");
-
-    
 
     FILE *fptr2;
     fptr2 = fopen("scheduler.perf", "w");
@@ -115,7 +112,7 @@ int main(int argc, char *argv[])
                 // if a message has been received
                 if (received != -1)
                 {
-                    
+
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     enQueueSJF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
@@ -152,18 +149,16 @@ int main(int argc, char *argv[])
                             p_executing->ID,
                             p_executing->tree_position->start_byte,
                             p_executing->tree_position->end_byte);
-                    
-                    
+
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
                             p_executing->Waiting_time);
                     p_executing->Finish_time = getClk();
 
-
                     p_executing->Remaining_time = 0;
                     wait(status);
-                    
+
                     // printf("Process with ID = %d has finished at time %d ", p_executing->ID, getClk());
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
@@ -310,6 +305,13 @@ int main(int argc, char *argv[])
                                 p_executing->Waiting_time);
                         p_executing->Status = STOPPED;
                         kill(p_executing->PID, SIGTSTP); // pause process
+                        // allocating memory
+                        Tree_Insert(Root, p_executing);
+                        fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                                p_executing->size,
+                                p_executing->ID,
+                                p_executing->tree_position->start_byte,
+                                p_executing->tree_position->end_byte);
                     }
                 }
 
@@ -338,6 +340,15 @@ int main(int argc, char *argv[])
                     total_time = getClk();
                     useful_time = p_executing->Runtime + useful_time;
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time, p_executing->TA, p_executing->WTA);
+
+                    // deallocating memory
+                    Tree_Delete(Root, p_executing);
+                    fprintf(fptr3, "At time  %d freed %d bytes from process %d from %d to %d\n", getClk(),
+                            p_executing->size,
+                            p_executing->ID,
+                            p_executing->tree_position->start_byte,
+                            p_executing->tree_position->end_byte);
+
                     // make a dummy node to hold the value
                     Node *dummy = p_executing;
                     // dequeue current process
