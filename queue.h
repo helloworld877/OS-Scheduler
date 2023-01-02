@@ -251,8 +251,7 @@ Node *peek_queue(Queue *q) // return ptr on head
     return q->Head;
 }
 
-int result = -1;
-int split = 0;
+
 void inOrder(TreeNode *root, Node *p)
 {
 
@@ -261,57 +260,29 @@ void inOrder(TreeNode *root, Node *p)
         return;
 
     inOrder(root->left, p);
-    if (result == 1 || split == 1)
-        return;
     inOrder(root->right, p);
-    if (result == 1 || split == 1)
-        return;
-    if (!root->left && !root->right && root->full != 1 && root->size >= p->size )
+    if (!root->left && !root->right && root->full != 1 && root->size >= p->size && p->tree_position->size > root->size)
     {
-        split = 1;
-       
-        if ((root->size) / 2 < p->size)
-        {
-            root->full = 1;
-            root->ID = p->ID;
-            result = 1;
-            p->tree_position = root;
-            return;
-        }
-       
-        struct TreeNode *l = (TreeNode *)malloc(sizeof(TreeNode));
-        struct TreeNode *r = (TreeNode *)malloc(sizeof(TreeNode));
-        l->parent = root;
-        r->parent = root;
-        root->left = l;
-        root->right = r;
-        l->size = (root->size) / 2;
-        r->size = (root->size) / 2;
-        r->full = 0;
-        l->full = 0;
-
-        l->start_byte = root->start_byte;
-        l->end_byte = root->start_byte + l->size - 1;
-
-        r->start_byte = root->start_byte + r->size;
-        r->end_byte = (root->end_byte);
-        
-
-        if ((l->size) / 2 < p->size)
-        {
-            l->full = 1;
-            l->ID = p->ID;
-            p->tree_position = l;
-            result = 1;
-            
-        }
+        p->tree_position = root;
         return;
+        // if ((root->size) / 2 < p->size)
+        // {
+        //     root->full = 1;
+        //     root->ID = p->ID;
+        //     result = 1;
+        //     p->tree_position = root;
+        //     return;
+        // }
+       
+        
+        // return;
     }
 }
 
 
 void Tree_Delete(TreeNode *root, Node*p )
 {
+    
     TreeNode * to_be_deleted = p->tree_position;
     to_be_deleted->full = 0;
     TreeNode * parent_ =  to_be_deleted->parent;
@@ -331,13 +302,49 @@ void Tree_Delete(TreeNode *root, Node*p )
 int Tree_Insert(TreeNode *root, Node *p)
 {
 
-    while (result == -1)
+    TreeNode* temp = (TreeNode *)malloc(sizeof(TreeNode));
+    temp->size = 2000;
+    p->tree_position = temp;
+    while (1)
     {
         inOrder(root, p);
-        split = 0;
-    }
-    result = -1;
+        if (p->tree_position->size / 2 < p->size)
+        {
+            p->tree_position->full = 1;
+            p->tree_position->ID = p->ID;
+            break;
+        }
+        else
+        {
+            struct TreeNode *l = (TreeNode *)malloc(sizeof(TreeNode));
+            struct TreeNode *r = (TreeNode *)malloc(sizeof(TreeNode));
+            l->parent = p->tree_position;
+            r->parent = p->tree_position;
+            p->tree_position->left = l;
+            p->tree_position->right = r;
+            l->size = (p->tree_position->size) / 2;
+            r->size = (p->tree_position->size) / 2;
+            r->full = 0;
+            l->full = 0;
 
+            l->start_byte = p->tree_position->start_byte;
+            l->end_byte = p->tree_position->start_byte + l->size - 1;
+
+            r->start_byte = p->tree_position->start_byte + r->size;
+            r->end_byte = (p->tree_position->end_byte);
+            
+
+            if ((l->size) / 2 < p->size)
+            {
+                l->full = 1;
+                l->ID = p->ID;
+                p->tree_position = l;
+                break;
+            }
+        }
+        
+    
+    }
    
     return 0;
 }
