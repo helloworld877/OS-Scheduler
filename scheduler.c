@@ -457,6 +457,12 @@ int main(int argc, char *argv[])
                     else
                     {
                         kill(PID, SIGSTOP); // pause process
+                        Tree_Insert(Root, p_executing);
+                        fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                            p_executing->size,
+                            p_executing->ID,
+                            p_executing->tree_position->start_byte,
+                            p_executing->tree_position->end_byte);
                         p_executing->PID = PID;
                         p_executing->Start_time = getClk();
                         p_executing->Remaining_time = p_executing->Runtime;
@@ -526,6 +532,13 @@ int main(int argc, char *argv[])
                         // change the process status
                         p_executing->Status = FINISHED;
 
+                        Tree_Delete(Root, p_executing);
+                        fprintf(fptr3, "At time  %d freed %d bytes from process %d from %d to %d\n", getClk(),
+                            p_executing->size,
+                            p_executing->ID,
+                            p_executing->tree_position->start_byte,
+                            p_executing->tree_position->end_byte);
+
                         // Update finish time
                         p_executing->Finish_time = getClk();
 
@@ -570,6 +583,13 @@ int main(int argc, char *argv[])
 
                     // change the process status
                     p_executing->Status = FINISHED;
+                    Tree_Delete(Root, p_executing);
+                    fprintf(fptr3, "At time  %d freed %d bytes from process %d from %d to %d\n", getClk(),
+                            p_executing->size,
+                            p_executing->ID,
+                            p_executing->tree_position->start_byte,
+                            p_executing->tree_position->end_byte);
+
 
                     // Update finish time
                     p_executing->Finish_time = getClk();

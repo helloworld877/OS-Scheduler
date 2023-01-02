@@ -323,8 +323,8 @@ void Tree_Delete(TreeNode *root, Node*p )
     
     if (check->full == 0 && !check->left && !check->right)
     {
-        root->left = NULL;
-        root->right = NULL;
+        parent_->left = NULL;
+        parent_->right = NULL;
     }    
   
 }
