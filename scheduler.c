@@ -627,6 +627,7 @@ int main(int argc, char *argv[])
         // While there are still processes in the ready queue or there are still processes to be recieved
         while (!isEmpty(readyQueue) || (received_number < processes_number))
         {
+            printf("\nstart while loop: %d\n",getClk());
             // We will break out of the below loop when we do not receive any message and our readyQueue is not empty
             do
             {
@@ -648,12 +649,17 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
+                    Node_to_insert->Remaining_time = Node_to_insert->Runtime;
+                    Node_to_insert->Waiting_time = 0;
+                    Node_to_insert->Stopped_time = getClk();
                     enQueueHPF(readyQueue, Node_to_insert);
                     received_number++;
+                    printf("found\n");
                 }
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
             nexttime = getClk();
+            printf("\n%d\n",nexttime);
             if (nexttime > time)
             {
                 time = nexttime;
@@ -665,10 +671,8 @@ int main(int argc, char *argv[])
 
                 if (p_executing->Status == WAITING)
                 {
+                    p_executing->Start_time = getClk();
                     int PID = fork();
-                    totalRuntime += p_executing->Runtime;
-                    p_executing->Remaining_time = p_executing->Runtime;
-
                     if (PID == 0)
                     {
                         char buff1[5]; // for ID
@@ -677,26 +681,30 @@ int main(int argc, char *argv[])
                         sprintf(buff2, "%d", p_executing->Runtime);
                         argv[1] = buff1;
                         argv[2] = buff2;
-                        p_executing->Start_time = getClk();
 
                         if (execv("./process.out", argv) == -1)
+                        {    
                             perror("Failed to execv for process.c");
+                            exit(-1);
+                        }
+                        exit(0);
                     }
                     else // First time for process to run:
                     {
-                            Tree_Insert(Root, p_executing);
-                            fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
-                                    p_executing->size,
-                                    p_executing->ID,
-                                    p_executing->tree_position->start_byte,
-                                    p_executing->tree_position->end_byte);
+                        p_executing->PID = PID;
+                        kill(p_executing->PID, SIGUSR1); // pause process
+                        Tree_Insert(Root, p_executing);
+                        fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                                p_executing->size,
+                                p_executing->ID,
+                                p_executing->tree_position->start_byte,
+                                p_executing->tree_position->end_byte);
                         
                         // TODO: calculate Waiting_time. Put info in output file
                         original_priorities[p_executing->ID - 1] = p_executing->Priority;
                         p_PIDS[p_executing->ID - 1] = PID;
-                        p_executing->Start_time = getClk();
+                        totalRuntime += p_executing->Runtime;
                         // printf("Starting process with ID %d and PID %d\n", p_executing->ID, PID);
-
                         // Write to output file:
                         p_executing->Waiting_time = p_executing->Start_time - p_executing->Arrival;
                         fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
@@ -706,21 +714,18 @@ int main(int argc, char *argv[])
                 {
                     // change process status
                     p_executing->Status = CONTINUE;
+                    // continue the process
+                    kill(p_executing->PID, SIGUSR2);
                     // printf("Resuming process with ID %d and PID %d\n", p_executing->ID, p_PIDS[p_executing->ID - 1]);
-                    //  record stopping time of process
-                    p_executing->Stopped_time = getClk();
                     // Write to output file
                     p_executing->Waiting_time += getClk() - p_executing->Stopped_time;
                     fprintf(fptr, "At time  %d  process %d resumed arr %d total %d remain %d wait %d \n", getClk(), p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time);
-                    // continue the process
-                    kill(p_PIDS[p_executing->ID - 1], SIGUSR2);
                 }
-                // apply quantum
-                int curr_time = getClk();
-                while (getClk() != curr_time + 1)
-                {
-                }
-
+                printf("\n%d\n",getClk());
+                while (getClk() != time + 1)
+                {}
+                printf("\n%d\n",getClk());
+                
                 p_executing->Remaining_time -= 1;
                 if (p_executing->Remaining_time == 0) // process is terminated i.e. remaining time =0
                 {
@@ -751,8 +756,8 @@ int main(int argc, char *argv[])
                 else
                 {
                     // pause the process
-                    kill(p_PIDS[p_executing->ID - 1], SIGUSR1);
-                    usleep(5000);
+                    kill(p_executing->PID, SIGUSR1);
+                    p_executing->Stopped_time = getClk();
                     // change process status
                     p_executing->Status = STOPPED;
                     // printf("process %d has stopped\n", p_executing->ID);
@@ -782,6 +787,8 @@ int main(int argc, char *argv[])
                         enQueueHPF(readyQueue, p_executing);
                     }
                 }
+            printf("\n%d\n",getClk());
+            printf("######################");
             }
         }
         break;
