@@ -13,12 +13,14 @@ kill(pid_of_the _process,SIGUSR1/2)
 / Modify this file as needed*/
 
 int remainingtime;
+int  mem_size;
 
 int main(int agrc, char *argv[])
 {
     initClk();
 
     remainingtime = atoi(argv[1]);
+    mem_size = atoi(argv[2]);
 
     int curr_time = getClk();
     while (remainingtime > 0)
