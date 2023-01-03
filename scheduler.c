@@ -115,13 +115,19 @@ int main(int argc, char *argv[])
                 {
 
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
+                    Tree_Insert(Root, Node_to_insert);
+                    fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                            Node_to_insert->size,
+                            Node_to_insert->ID,
+                            Node_to_insert->tree_position->start_byte,
+                            Node_to_insert->tree_position->end_byte);
                     enQueueSJF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
                 }
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
             int pid;
-            if (!isEmpty(readyQueue))
+            if (nexttime > time)
             {
                 int clockk = getClk();
                 int current_child_pid;
@@ -144,14 +150,7 @@ int main(int argc, char *argv[])
                 else
                 {
                     int status;
-                    Tree_Insert(Root, p_executing);
-                    fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
-                            p_executing->size,
-                            p_executing->ID,
-                            p_executing->tree_position->start_byte,
-                            p_executing->tree_position->end_byte);
-                    
-
+                
                     fprintf(fptr, "At time  %d  process %d started arr %d total %d remain %d wait %d \n", getClk(),
                             p_executing->ID, p_executing->Arrival,
                             p_executing->Runtime, p_executing->Remaining_time,
@@ -197,11 +196,18 @@ int main(int argc, char *argv[])
 
                 if (received != -1)
                 {
+                    printf("%d ", processes_number);
                     printf("Process with ID %d has just arrived at time %d\n", msg.message_data[0], getClk());
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
                     Node_to_insert->Remaining_time = Node_to_insert->Runtime;
                     Node_to_insert->Waiting_time = 0;
                     Node_to_insert->Stopped_time = getClk();
+                    Tree_Insert(Root, Node_to_insert);
+                    fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                                Node_to_insert->size,
+                                Node_to_insert->ID,
+                                Node_to_insert->tree_position->start_byte,
+                                Node_to_insert->tree_position->end_byte);
                     enQueueHPF(readyQueue, Node_to_insert); // create fn to enqueue a node with these info FIFO
                     received_number++;
                     res = true;
@@ -308,12 +314,7 @@ int main(int argc, char *argv[])
                         p_executing->Status = STOPPED;
                         kill(p_executing->PID, SIGTSTP); // pause process
                         // allocating memory
-                        Tree_Insert(Root, p_executing);
-                        fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
-                                p_executing->size,
-                                p_executing->ID,
-                                p_executing->tree_position->start_byte,
-                                p_executing->tree_position->end_byte);
+                        
                     }
                 }
 
@@ -408,6 +409,12 @@ int main(int argc, char *argv[])
                 {
                     printf("message successful at time %d \n", getClk());
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
+                    Tree_Insert(Root, Node_to_insert);
+                        fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                            Node_to_insert->size,
+                            Node_to_insert->ID,
+                            Node_to_insert->tree_position->start_byte,
+                            Node_to_insert->tree_position->end_byte);
                     enQueueRR(readyQueue, Node_to_insert);
                     received_number++;
                     printf("Current ready queue : ");
@@ -457,12 +464,6 @@ int main(int argc, char *argv[])
                     else
                     {
                         kill(PID, SIGSTOP); // pause process
-                        Tree_Insert(Root, p_executing);
-                        fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
-                            p_executing->size,
-                            p_executing->ID,
-                            p_executing->tree_position->start_byte,
-                            p_executing->tree_position->end_byte);
                         p_executing->PID = PID;
                         p_executing->Start_time = getClk();
                         p_executing->Remaining_time = p_executing->Runtime;
@@ -648,6 +649,12 @@ int main(int argc, char *argv[])
                 if (received != -1)
                 {
                     Node_to_insert = newNode(msg.message_data[0], msg.message_data[1], msg.message_data[2], msg.message_data[3], msg.message_data[4], WAITING);
+                    Tree_Insert(Root, Node_to_insert);
+                    fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                                    Node_to_insert->size,
+                                    Node_to_insert->ID,
+                                    Node_to_insert->tree_position->start_byte,
+                                    Node_to_insert->tree_position->end_byte);
                     enQueueHPF(readyQueue, Node_to_insert);
                     received_number++;
                 }
@@ -684,12 +691,7 @@ int main(int argc, char *argv[])
                     }
                     else // First time for process to run:
                     {
-                            Tree_Insert(Root, p_executing);
-                            fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
-                                    p_executing->size,
-                                    p_executing->ID,
-                                    p_executing->tree_position->start_byte,
-                                    p_executing->tree_position->end_byte);
+                            
                         
                         // TODO: calculate Waiting_time. Put info in output file
                         original_priorities[p_executing->ID - 1] = p_executing->Priority;
