@@ -684,6 +684,13 @@ int main(int argc, char *argv[])
                     }
                     else // First time for process to run:
                     {
+                            Tree_Insert(Root, p_executing);
+                            fprintf(fptr3, "At time  %d allocated %d bytes for process %d from %d to %d\n", getClk(),
+                                    p_executing->size,
+                                    p_executing->ID,
+                                    p_executing->tree_position->start_byte,
+                                    p_executing->tree_position->end_byte);
+                        
                         // TODO: calculate Waiting_time. Put info in output file
                         original_priorities[p_executing->ID - 1] = p_executing->Priority;
                         p_PIDS[p_executing->ID - 1] = PID;
@@ -734,6 +741,12 @@ int main(int argc, char *argv[])
                     // write to file
                     fprintf(fptr, "At time  %d  process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f  \n", p_executing->Finish_time, p_executing->ID, p_executing->Arrival, p_executing->Runtime, p_executing->Remaining_time, p_executing->Waiting_time, p_executing->TA, p_executing->WTA);
                     total_time = getClk();
+                    Tree_Delete(Root, p_executing);
+                    fprintf(fptr3, "At time  %d freed %d bytes from process %d from %d to %d\n", getClk(),
+                            p_executing->size,
+                            p_executing->ID,
+                            p_executing->tree_position->start_byte,
+                            p_executing->tree_position->end_byte);
                 }
                 else
                 {

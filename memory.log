@@ -1,5 +1,9 @@
 #At time x process y state arr w total z remain y wait k 
 At time  2 allocated 200 bytes for process 1 from 0 to 255
-At time  5 allocated 200 bytes for process 2 from 256 to 511
-At time  15 freed 200 bytes from process 1 from 0 to 255
-At time  30 freed 200 bytes from process 2 from 256 to 511
+At time  4 freed 200 bytes from process 1 from 0 to 255
+At time  4 allocated 8 bytes for process 2 from 0 to 7
+At time  5 freed 8 bytes from process 2 from 0 to 7
+At time  5 allocated 16 bytes for process 3 from 0 to 15
+At time  7 allocated 50 bytes for process 4 from 64 to 127
+At time  10 freed 50 bytes from process 4 from 64 to 127
+At time  12 freed 16 bytes from process 3 from 0 to 15
