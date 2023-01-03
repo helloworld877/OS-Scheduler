@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
             } while (received != -1); // since different processes can have the same arrival time, if I received a message enter to check if I will receive another one as well
 
             int pid;
-            if (nexttime > time)
+            if (!isEmpty(readyQueue))
             {
                 int clockk = getClk();
                 int current_child_pid;
@@ -137,7 +137,10 @@ int main(int argc, char *argv[])
                 p_executing->Waiting_time = getClk() - p_executing->Arrival;
                 char buff1[5];
                 sprintf(buff1, "%d", burst_time);
+                char buff2[5];
+                sprintf(buff2, "%d", p_executing->size);
                 argv[1] = buff1;
+                argv[2] = buff2;
                 deQueue(readyQueue);
                 pid = fork();
                 if (pid != 0)
@@ -284,9 +287,12 @@ int main(int argc, char *argv[])
                     if (PID == 0)
                     {
                         // sending parameters to child process
-                        char buff1[5]; // for Runtime
-                        sprintf(buff1, "%d", p_executing->Runtime);
+                        char buff1[5];
+                        sprintf(buff1, "%d", p_executing->Remaining_time);
+                        char buff2[5];
+                        sprintf(buff2, "%d", p_executing->size);
                         argv[1] = buff1;
+                        argv[2] = buff2;
 
                         // printf("\nI AM THE CHILLLD\n");
 
@@ -452,9 +458,12 @@ int main(int argc, char *argv[])
 
                     if (PID == 0)
                     {
-                        char buff1[5]; // for Runtime
-                        sprintf(buff1, "%d", p_executing->Runtime);
+                        char buff1[5];
+                        sprintf(buff1, "%d", p_executing->Remaining_time);
+                        char buff2[5];
+                        sprintf(buff2, "%d", p_executing->size);
                         argv[1] = buff1;
+                        argv[2] = buff2;
                         p_executing->Start_time = getClk();
 
                         if (execv("./process.out", argv) == -1)
